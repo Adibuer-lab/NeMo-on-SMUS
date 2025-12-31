@@ -55,13 +55,6 @@ This repo explores infrastructure and tooling to learn about NVIDIA NeMo on Sage
 - `make setup-all`: run `provisioning-policy`, `nested-stack-policy`, `sync`, then `blueprint` for the current env.
 
 
-## Notebook Usage (Capability Map)
-
-The capability map notebook proves the deployed environment is working end-to-end:
-
-- FSx for Lustre is visible in the Space and in HyperPod pods.
-- Approved NeMo/LLMFT container images are discovered from SSM.
-- EKS add-ons (training operator, task governance/Kueue) are present.
-- Recipe-based training/inference workflows run on the cluster.
+## Notebook Usage
 
 Clone the repo into your deployed Hyperpod SMUS Project and starts here: `notebooks/01_exploratory_intro.ipynb`.
