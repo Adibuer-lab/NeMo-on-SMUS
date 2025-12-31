@@ -1,0 +1,262 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: NeMo container build pipeline - ECR, S3, CodeBuild with Lambda-managed source upload
+
+Parameters:
+  RepositoryName:
+    Type: String
+    Default: nemo-framework-hyperpod
+    Description: ECR repository name
+  
+  ImageTag:
+    Type: String
+    Default: 25.04-eks
+    Description: Docker image tag
+
+Resources:
+  # S3 Bucket for build source files
+  SourceBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub nemo-container-build-${AWS::AccountId}-${AWS::Region}
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Project
+          Value: nemo-unified-studio
+
+  # ECR Repository
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref RepositoryName
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep last 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+        - Key: Project
+          Value: nemo-unified-studio
+
+  # Lambda Role for uploading source to S3
+  SourceUploadLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: NemoSourceUploadLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: S3WritePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub ${SourceBucket.Arn}/*
+
+  # Lambda function to upload Dockerfile to S3
+  SourceUploadFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: NemoSourceUpload
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt SourceUploadLambdaRole.Arn
+      Timeout: 60
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import zipfile
+          import io
+
+          def handler(event, context):
+              try:
+                  bucket = event['ResourceProperties']['Bucket']
+                  key = event['ResourceProperties']['Key']
+                  dockerfile = event['ResourceProperties']['Dockerfile']
+                  
+                  if event['RequestType'] in ['Create', 'Update']:
+                      zip_buffer = io.BytesIO()
+                      with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+                          zf.writestr('Dockerfile', dockerfile)
+                      zip_buffer.seek(0)
+                      
+                      s3 = boto3.client('s3')
+                      s3.put_object(Bucket=bucket, Key=key, Body=zip_buffer.getvalue())
+                      
+                  elif event['RequestType'] == 'Delete':
+                      s3 = boto3.client('s3')
+                      s3.delete_object(Bucket=bucket, Key=key)
+                  
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {'S3Uri': f's3://{bucket}/{key}'})
+              except Exception as e:
+                  print(f"Error: {e}")
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+
+  # Custom resource to upload Dockerfile - DOCKERFILE_CONTENT injected by deploy script
+  SourceUpload:
+    Type: Custom::SourceUpload
+    DependsOn: SourceBucket
+    Properties:
+      ServiceToken: !GetAtt SourceUploadFunction.Arn
+      Bucket: !Ref SourceBucket
+      Key: !Sub ${RepositoryName}/source.zip
+      Dockerfile: |
+        __DOCKERFILE_CONTENT__
+
+  # IAM Role for CodeBuild
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: NemoContainerBuildRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: NemoContainerBuildPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                Resource: !Sub ${SourceBucket.Arn}/*
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource: !GetAtt SourceBucket.Arn
+              - Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                  - ecr:PutImage
+                  - ecr:InitiateLayerUpload
+                  - ecr:UploadLayerPart
+                  - ecr:CompleteLayerUpload
+                Resource: !GetAtt ECRRepository.Arn
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nemo-container-build/ngc-api-key-*
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*
+
+  # CodeBuild Project
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    DependsOn: SourceUpload
+    Properties:
+      Name: nemo-container-build
+      Description: Builds NeMo Framework container for HyperPod
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_2XLARGE
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: ECR_REGISTRY
+            Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+          - Name: ECR_REPOSITORY
+            Value: !Ref RepositoryName
+          - Name: IMAGE_TAG
+            Value: !Ref ImageTag
+      Source:
+        Type: S3
+        Location: !Sub ${SourceBucket}/${RepositoryName}/source.zip
+        BuildSpec: |
+          version: 0.2
+          env:
+            secrets-manager:
+              NGC_USERNAME: nemo-container-build/ngc-api-key:username
+              NGC_PASSWORD: nemo-container-build/ngc-api-key:password
+          phases:
+            pre_build:
+              commands:
+                - echo "Logging in to NGC..."
+                - echo $NGC_PASSWORD | docker login nvcr.io -u $NGC_USERNAME --password-stdin
+                - echo "Logging in to ECR..."
+                - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+            build:
+              commands:
+                - echo "Building NeMo container..."
+                - docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                - docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+            post_build:
+              commands:
+                - echo "Pushing to ECR..."
+                - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+                - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+                - echo "Build complete - $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      TimeoutInMinutes: 90
+      Tags:
+        - Key: Project
+          Value: nemo-unified-studio
+
+Outputs:
+  SourceBucketName:
+    Description: S3 bucket for build source files
+    Value: !Ref SourceBucket
+
+  ECRRepositoryUri:
+    Description: ECR repository URI
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryName}
+  
+  CodeBuildProjectName:
+    Description: CodeBuild project name
+    Value: !Ref CodeBuildProject
+  
+  ContainerImageUri:
+    Description: Full container image URI (after build)
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryName}:${ImageTag}

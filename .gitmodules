@@ -1,0 +1,12 @@
+[submodule "sagemaker-hyperpod-cluster-setup"]
+	path = sagemaker-hyperpod-cluster-setup
+	url = git@github.com:Adibuer-lab/sagemaker-hyperpod-cluster-setup.git
+	branch = main
+[submodule "sagemaker-hyperpod-recipes"]
+	path = sagemaker-hyperpod-recipes
+	url = git@github.com:Adibuer-lab/sagemaker-hyperpod-recipes.git
+	branch = dev
+[submodule "sagemaker-hyperpod-training-adapter-for-nemo"]
+	path = sagemaker-hyperpod-training-adapter-for-nemo
+	url = git@github.com:Adibuer-lab/sagemaker-hyperpod-training-adapter-for-nemo.git
+	branch = dev

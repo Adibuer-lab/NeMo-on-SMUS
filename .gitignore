@@ -1,0 +1,28 @@
+# Logs
+**/logs/**
+.venv*
+.env
+.env.*
+!.env.template
+
+# Staging directories
+**/.staging/
+
+# Conversation logs
+convo.md
+.kiro/settings/mcp.json
+AGENTS.md
+scripts/delete-hyperpod-policies.py
+docs/reference/official-console-cert-manager-template.json
+docs/reference/official-console-hpto-main-template.json
+docs/reference/official-console-observability-template.json
+docs/reference/official-console-observability-template.yaml
+docs/reference/official-console-stack-observations.md
+docs/reference/official-console-template-comparison.md
+CLAUDE.md
+TOSOS.md
+mirror-recipe-image.sh
+mirror-buildkit-to-ecr.sh
+mirror-dockerfile-frontend-to-ecr.sh
+
+.ipynb_checkpoints

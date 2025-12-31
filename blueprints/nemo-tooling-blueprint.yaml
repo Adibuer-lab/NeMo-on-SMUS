@@ -1,0 +1,2390 @@
+Parameters:
+  datazoneEnvironmentEnvironmentId:
+    Type: String
+    Description: EnvironmentId for which the resource will be created for.
+  datazoneEnvironmentDomainId:
+    Type: String
+    Description: DZ domain Id for which domain the resource will be created for.
+  datazoneEnvironmentDomainArn:
+    Type: String
+    Description: DZ domain Arn for which domain the resource will be created for.
+  datazoneEnvironmentProjectId:
+    Type: String
+    Description: DZ projectId for which project the resource will be created for.
+  s3BucketArn:
+    Type: String
+    Description: Reserved SMUS parameter for the project S3 bucket ARN.
+  datazoneScopeName:
+    Type: String
+    Default: dev
+    Description: Name for the scope (e.g. prod, dev).
+  datazoneEnvironmentStage:
+    Type: String
+    Default: prod
+    Description: DataZone Service stage.
+  EnableTaskGovernance:
+    Type: String
+    Default: "true"
+    AllowedValues:
+    - "true"
+    - "false"
+    Description: Enable HyperPod task governance.
+  EnableFSxLustre:
+    Type: String
+    Default: "true"
+    AllowedValues:
+    - "true"
+    - "false"
+    Description: Create FSx for Lustre file system for HyperPod
+  FSxStorageCapacity:
+    Type: Number
+    Default: 1200
+    Description: FSx for Lustre storage capacity in GiB (1200, 2400, or multiples of 2400)
+  FSxPerUnitStorageThroughput:
+    Type: Number
+    Default: 250
+    AllowedValues:
+    - 125
+    - 250
+    - 500
+    - 1000
+    Description: FSx throughput per unit storage (MB/s/TiB)
+  FSxRootSquashUidGid:
+    Type: String
+    Default: ''
+    Description: Optional root squash mapping in UID:GID format (e.g., 1000:100). Leave empty to skip.
+  FSxNoSquashNids:
+    Type: String
+    Default: ''
+    Description: Optional comma-separated list of Lustre NIDs exempt from root squash
+  HyperPodClusterName:
+    Type: String
+    Default: nemo-hyperpod
+    Description: Base name for the HyperPod cluster (project ID suffix added automatically)
+  NeMoContainerRepository:
+    Type: String
+    Default: nemo-framework-hyperpod
+    Description: ECR repository name for NeMo container
+  NeMoContainerTag:
+    Type: String
+    Default: 25.04-eks
+    Description: NeMo container image tag
+  LLMFTContainerRepository:
+    Type: String
+    Default: hyperpod-recipes-llmft-custom
+    Description: ECR repository name for LLMFT custom container
+  LLMFTContainerTag:
+    Type: String
+    Default: llmft-v1.0.0-llama-custom
+    Description: LLMFT custom container image tag
+  InstanceType1:
+    Type: String
+    Default: ml.p4d.24xlarge
+    AllowedValues:
+    - ml.g5.12xlarge
+    - ml.g5.48xlarge
+    - ml.p4d.24xlarge
+    - ml.p5.48xlarge
+    - ml.p4d.24xlarge
+    Description: Instance type for training nodes
+  InstanceGroupSettings1:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 1 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings2:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 2 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings3:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 3 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings4:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 4 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings5:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 5 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings6:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 6 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings7:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 7 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings8:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 8 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings9:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 9 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings10:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 10 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings11:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 11 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings12:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 12 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings13:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 13 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings14:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 14 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings15:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 15 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings16:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 16 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings17:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 17 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings18:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 18 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings19:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 19 (JSON array string). Leave empty to use defaults.
+  InstanceGroupSettings20:
+    Type: String
+    Default: ""
+    Description: Optional override for instance group settings 20 (JSON array string). Leave empty to use defaults.
+  KubernetesVersion:
+    Type: String
+    Default: "1.33"
+    AllowedValues:
+    - "1.28"
+    - "1.29"
+    - "1.30"
+    - "1.31"
+    - "1.32"
+    - "1.33"
+    Description: Kubernetes version for EKS cluster
+  NestedStackBucket:
+    Type: String
+    Default: ""
+    Description: S3 bucket for nested stacks (leave empty to use default nemo-hyperpod-templates bucket)
+  userRoleArn:
+    Type: String
+    Description: Project Role ARN
+  privateSubnets:
+    Type: String
+    Description: Project Private Subnets (comma-separated)
+  UserNamespaces:
+    Type: String
+    Default: "hyperpod-ns-datascientist1"
+    Description: Comma-separated list of user workload namespaces. Use hyperpod-ns-<team> when task governance is enabled.
+  CustomUserNamespaces:
+    Type: String
+    Default: "nemo-custom-ns"
+    Description: Comma-separated list of custom workload namespaces for the AZ placement queues. Leave empty to disable custom queues.
+  TaskGovernanceComputeQuotaInstanceType:
+    Type: String
+    Default: ""
+    Description: Instance type to allocate per team for Task Governance compute quota. Leave empty to inherit InstanceType1.
+  TaskGovernanceComputeQuotaInstanceCount:
+    Type: Number
+    Default: 4
+    Description: Number of instances to allocate per team for Task Governance compute quota.
+  TaskGovernanceComputeQuotaFairShareWeight:
+    Type: Number
+    Default: 50
+    Description: Fair-share weight for Task Governance compute quota (0-100).
+  TaskGovernanceComputeQuotaBorrowLimit:
+    Type: Number
+    Default: 50
+    Description: Borrow limit percentage for Task Governance compute quota.
+  TaskGovernanceComputeQuotaSharingStrategy:
+    Type: String
+    Default: LendAndBorrow
+    AllowedValues:
+    - Lend
+    - DontLend
+    - LendAndBorrow
+    Description: Resource sharing strategy for Task Governance compute quota.
+  TaskGovernanceComputeQuotaPreemptTeamTasks:
+    Type: String
+    Default: LowerPriority
+    AllowedValues:
+    - Never
+    - LowerPriority
+    Description: Preemption behavior for Task Governance compute quota.
+  TaskGovernanceTeamName:
+    Type: String
+    Default: ""
+    Description: Optional team name to derive hyperpod-ns-<team> when task governance is enabled. Leave empty to auto-derive from cluster name.
+  EnableSpacesFeature:
+    Type: String
+    Default: "false"
+    AllowedValues:
+    - "true"
+    - "false"
+    Description: Enable SageMaker Spaces features (EKS addon + workspace templates).
+  DevModeDisableRollback:
+    Type: String
+    Default: "true"
+    AllowedValues:
+    - "true"
+    - "false"
+    Description: Dev mode - disable nested stack rollback and preserve resources on failure.
+Conditions:
+  CreateFSx: !Equals [!Ref EnableFSxLustre, "true"]
+  UseDefaultNestedStackBucket: !Equals [!Ref NestedStackBucket, ""]
+  HasUserNamespaces: !Not
+  - !Equals [!Ref UserNamespaces, ""]
+  HasCustomUserNamespaces: !Not
+  - !Equals [!Ref CustomUserNamespaces, ""]
+  HasTaskGovernanceComputeQuotaInstanceType: !Not
+  - !Equals [!Ref TaskGovernanceComputeQuotaInstanceType, ""]
+  HasInstanceGroupSettings1: !Not [!Equals [!Ref InstanceGroupSettings1, ""]]
+  HasInstanceGroupSettings2: !Not [!Equals [!Ref InstanceGroupSettings2, ""]]
+  HasInstanceGroupSettings3: !Not [!Equals [!Ref InstanceGroupSettings3, ""]]
+  HasInstanceGroupSettings4: !Not [!Equals [!Ref InstanceGroupSettings4, ""]]
+  HasInstanceGroupSettings5: !Not [!Equals [!Ref InstanceGroupSettings5, ""]]
+  HasInstanceGroupSettings6: !Not [!Equals [!Ref InstanceGroupSettings6, ""]]
+  HasInstanceGroupSettings7: !Not [!Equals [!Ref InstanceGroupSettings7, ""]]
+  HasInstanceGroupSettings8: !Not [!Equals [!Ref InstanceGroupSettings8, ""]]
+  HasInstanceGroupSettings9: !Not [!Equals [!Ref InstanceGroupSettings9, ""]]
+  HasInstanceGroupSettings10: !Not [!Equals [!Ref InstanceGroupSettings10, ""]]
+  HasInstanceGroupSettings11: !Not [!Equals [!Ref InstanceGroupSettings11, ""]]
+  HasInstanceGroupSettings12: !Not [!Equals [!Ref InstanceGroupSettings12, ""]]
+  HasInstanceGroupSettings13: !Not [!Equals [!Ref InstanceGroupSettings13, ""]]
+  HasInstanceGroupSettings14: !Not [!Equals [!Ref InstanceGroupSettings14, ""]]
+  HasInstanceGroupSettings15: !Not [!Equals [!Ref InstanceGroupSettings15, ""]]
+  HasInstanceGroupSettings16: !Not [!Equals [!Ref InstanceGroupSettings16, ""]]
+  HasInstanceGroupSettings17: !Not [!Equals [!Ref InstanceGroupSettings17, ""]]
+  HasInstanceGroupSettings18: !Not [!Equals [!Ref InstanceGroupSettings18, ""]]
+  HasInstanceGroupSettings19: !Not [!Equals [!Ref InstanceGroupSettings19, ""]]
+  HasInstanceGroupSettings20: !Not [!Equals [!Ref InstanceGroupSettings20, ""]]
+  HasTaskGovernanceTeamName: !Not
+  - !Equals [!Ref TaskGovernanceTeamName, ""]
+  TaskGovernanceEnabled: !Equals [!Ref EnableTaskGovernance, "true"]
+  SpacesEnabled: !Equals [!Ref EnableSpacesFeature, "true"]
+Resources:
+  VpcLookupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: DescribeSubnetsAndSecurityGroups
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - ec2:DescribeSubnets
+            - ec2:DescribeSecurityGroups
+            Resource: "*"
+    DependsOn: []
+  VpcLookupFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 30
+      Role: !GetAtt VpcLookupRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+
+          def handler(event, context):
+              if event['RequestType'] == 'Delete':
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                  return
+              try:
+                  ec2 = boto3.client('ec2')
+                  subnet_ids = [s.strip() for s in event['ResourceProperties']['SubnetIds'].split(',')]
+                  response = ec2.describe_subnets(SubnetIds=subnet_ids)
+                  subnets = response['Subnets']
+                  vpc_id = subnets[0]['VpcId']
+                  
+                  EKS_UNSUPPORTED_AZ_IDS = {'use1-az3'}
+                  sorted_subnets = sorted(subnets, key=lambda x: x['AvailabilityZoneId'])
+                  eks_subnets = [s for s in sorted_subnets if s['AvailabilityZoneId'] not in EKS_UNSUPPORTED_AZ_IDS]
+                  
+                  result = {
+                      'VpcId': vpc_id,
+                      'AvailabilityZoneIds': ','.join(s['AvailabilityZoneId'] for s in sorted_subnets),
+                      'AvailabilityZones': ','.join(s['AvailabilityZone'] for s in sorted_subnets),
+                      'EksSubnetIds': ','.join(s['SubnetId'] for s in eks_subnets),
+                      'EksAZIds': ','.join(s['AvailabilityZoneId'] for s in eks_subnets),
+                      'EksAZs': ','.join(s['AvailabilityZone'] for s in eks_subnets),
+                      'NfsSecurityGroupId': ''
+                  }
+                  for i, s in enumerate(sorted_subnets, 1):
+                      result[f'Subnet{i}'] = s['SubnetId']
+                      result[f'AZ{i}'] = s['AvailabilityZoneId']
+                      result[f'AZName{i}'] = s['AvailabilityZone']
+                  
+                  sm_domain_id = event['ResourceProperties'].get('SageMakerDomainId', '')
+                  if sm_domain_id:
+                      sg_name = f'security-group-for-inbound-nfs-{sm_domain_id}'
+                      sg_resp = ec2.describe_security_groups(Filters=[{'Name': 'group-name', 'Values': [sg_name]}])
+                      if sg_resp['SecurityGroups']:
+                          result['NfsSecurityGroupId'] = sg_resp['SecurityGroups'][0]['GroupId']
+                  
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, result)
+              except Exception as e:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+    DependsOn: []
+  VpcLookup:
+    Type: Custom::VpcLookup
+    Properties:
+      ServiceToken: !GetAtt VpcLookupFunction.Arn
+      SubnetIds: !Ref privateSubnets
+      SageMakerDomainId: !ImportValue
+        Fn::Sub:
+        - sageMakerDomainId-${ToolingEnvId}-${ScopeName}
+        - ToolingEnvId: !Select
+          - 4
+          - !Split
+            - _
+            - !Select
+              - 1
+              - !Split [/, !Ref userRoleArn]
+          ScopeName: !Ref datazoneScopeName
+    DependsOn: []
+  SettingsCombinerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: SSMWrite
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - ssm:PutParameter
+            - ssm:DeleteParameter
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/hyperpod/${HyperPodClusterName}-${datazoneEnvironmentProjectId}/*'
+    DependsOn: []
+  SettingsCombinerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 60
+      Role: !GetAtt SettingsCombinerRole.Arn
+      Code:
+        ZipFile: |
+          import json, boto3, urllib.request
+          ssm = boto3.client('ssm')
+          def send_response(event, context, status, data=None, reason=None):
+              body = json.dumps({
+                  'Status': status,
+                  'Reason': reason or f'See CloudWatch Log Stream: {context.log_stream_name}',
+                  'PhysicalResourceId': context.log_stream_name,
+                  'StackId': event['StackId'],
+                  'RequestId': event['RequestId'],
+                  'LogicalResourceId': event['LogicalResourceId'],
+                  'Data': data or {}
+              }).encode('utf-8')
+              req = urllib.request.Request(event['ResponseURL'], data=body, headers={'Content-Type': ''}, method='PUT')
+              urllib.request.urlopen(req)
+          def handler(event, context):
+              props = event['ResourceProperties']
+              prefix = props['Prefix']
+              try:
+                  if event['RequestType'] == 'Delete':
+                      for name in [f'{prefix}/instance-group-settings', f'{prefix}/rig-settings']:
+                          try: ssm.delete_parameter(Name=name)
+                          except: pass
+                      send_response(event, context, 'SUCCESS')
+                      return
+                  ig = []
+                  for i in range(1, 21):
+                      val = props.get(f'IG{i}', '[]')
+                      if val and val != '[]':
+                          ig.extend(json.loads(val))
+                  rig = []
+                  for i in range(1, 21):
+                      val = props.get(f'RIG{i}', '[]')
+                      if val and val != '[]':
+                          rig.extend(json.loads(val))
+                  ig_param = f'{prefix}/instance-group-settings'
+                  rig_param = f'{prefix}/rig-settings'
+                  ssm.put_parameter(Name=ig_param, Value=json.dumps(ig) or '[]', Type='String', Overwrite=True, Tier='Advanced')
+                  ssm.put_parameter(Name=rig_param, Value=json.dumps(rig) or '[]', Type='String', Overwrite=True, Tier='Advanced')
+                  send_response(event, context, 'SUCCESS', {'InstanceGroupSettingsParam': ig_param, 'RigSettingsParam': rig_param})
+              except Exception as e:
+                  send_response(event, context, 'FAILED', reason=str(e))
+    DependsOn: []
+  SettingsCombiner:
+    Type: Custom::SettingsCombiner
+    DependsOn: VpcLookup
+    Properties:
+      ServiceToken: !GetAtt SettingsCombinerFunction.Arn
+      Prefix: !Sub '/hyperpod/${HyperPodClusterName}-${datazoneEnvironmentProjectId}'
+      IG1: !If
+        - HasInstanceGroupSettings1
+        - !Ref InstanceGroupSettings1
+        - !Sub
+          - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+          - AZ: !GetAtt VpcLookup.AZ1
+            Type: !Ref InstanceType1
+            SG: !ImportValue
+              Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+            Subnet: !GetAtt VpcLookup.Subnet1
+      IG2: !If
+        - HasInstanceGroupSettings2
+        - !Ref InstanceGroupSettings2
+        - !Sub
+          - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+          - AZ: !GetAtt VpcLookup.AZ2
+            Type: !Ref InstanceType1
+            SG: !ImportValue
+              Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+            Subnet: !GetAtt VpcLookup.Subnet2
+      IG3: !If
+        - HasInstanceGroupSettings3
+        - !Ref InstanceGroupSettings3
+        - !Sub
+          - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+          - AZ: !GetAtt VpcLookup.AZ3
+            Type: !Ref InstanceType1
+            SG: !ImportValue
+              Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+            Subnet: !GetAtt VpcLookup.Subnet3
+      IG4: !If
+        - HasInstanceGroupSettings4
+        - !Ref InstanceGroupSettings4
+        - !Sub
+          - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+          - AZ: !GetAtt VpcLookup.AZ4
+            Type: !Ref InstanceType1
+            SG: !ImportValue
+              Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+            Subnet: !GetAtt VpcLookup.Subnet4
+      IG5: !If
+        - HasInstanceGroupSettings5
+        - !Ref InstanceGroupSettings5
+        - !Sub
+          - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+          - AZ: !GetAtt VpcLookup.AZ5
+            Type: !Ref InstanceType1
+            SG: !ImportValue
+              Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+            Subnet: !GetAtt VpcLookup.Subnet5
+      IG6: !If
+        - HasInstanceGroupSettings6
+        - !Ref InstanceGroupSettings6
+        - !Sub
+          - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+          - AZ: !GetAtt VpcLookup.AZ6
+            Type: !Ref InstanceType1
+            SG: !ImportValue
+              Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+            Subnet: !GetAtt VpcLookup.Subnet6
+      IG7: !If
+        - HasInstanceGroupSettings7
+        - !Ref InstanceGroupSettings7
+        - "[]"
+      IG8: !If
+        - HasInstanceGroupSettings8
+        - !Ref InstanceGroupSettings8
+        - !If
+          - SpacesEnabled
+          - !Sub
+            - "[{\"InstanceGroupName\":\"workspace-cpu\",\"InstanceType\":\"ml.c5.2xlarge\",\"InstanceCount\":0,\"KubernetesConfig\":{\"Labels\":{\"node-role\":\"workspace-cpu\"}},\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+            - SG: !ImportValue
+                Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+              Subnet: !GetAtt VpcLookup.Subnet1
+          - "[]"
+      IG9: !If
+        - HasInstanceGroupSettings9
+        - !Ref InstanceGroupSettings9
+        - !If
+          - SpacesEnabled
+          - !Sub
+            - "[{\"InstanceGroupName\":\"workspace-gpu\",\"InstanceType\":\"ml.g5.xlarge\",\"InstanceCount\":0,\"KubernetesConfig\":{\"Labels\":{\"node-role\":\"workspace-gpu\"}},\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+            - SG: !ImportValue
+                Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+              Subnet: !GetAtt VpcLookup.Subnet1
+          - "[]"
+      IG10: !If
+        - HasInstanceGroupSettings10
+        - !Ref InstanceGroupSettings10
+        - "[]"
+      IG11: !If
+        - HasInstanceGroupSettings11
+        - !Ref InstanceGroupSettings11
+        - "[]"
+      IG12: !If
+        - HasInstanceGroupSettings12
+        - !Ref InstanceGroupSettings12
+        - "[]"
+      IG13: !If
+        - HasInstanceGroupSettings13
+        - !Ref InstanceGroupSettings13
+        - "[]"
+      IG14: !If
+        - HasInstanceGroupSettings14
+        - !Ref InstanceGroupSettings14
+        - "[]"
+      IG15: !If
+        - HasInstanceGroupSettings15
+        - !Ref InstanceGroupSettings15
+        - "[]"
+      IG16: !If
+        - HasInstanceGroupSettings16
+        - !Ref InstanceGroupSettings16
+        - "[]"
+      IG17: !If
+        - HasInstanceGroupSettings17
+        - !Ref InstanceGroupSettings17
+        - "[]"
+      IG18: !If
+        - HasInstanceGroupSettings18
+        - !Ref InstanceGroupSettings18
+        - "[]"
+      IG19: !If
+        - HasInstanceGroupSettings19
+        - !Ref InstanceGroupSettings19
+        - "[]"
+      IG20: !If
+        - HasInstanceGroupSettings20
+        - !Ref InstanceGroupSettings20
+        - "[]"
+  StepFunctionsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: states.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: StepFunctionsPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - cloudformation:DescribeStacks
+            - cloudformation:DescribeStackEvents
+            Resource: !Sub 'arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/HyperPod-*-${datazoneEnvironmentProjectId}/*'
+          - Effect: Allow
+            Action:
+            - ssm:GetParameter
+            - ssm:DeleteParameter
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/nemo-hyperpod/cfn-callback/HyperPod-*-${datazoneEnvironmentProjectId}'
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: !GetAtt NestedStackCallbackFunction.Arn
+          - Effect: Allow
+            Action:
+            - logs:CreateLogDelivery
+            - logs:GetLogDelivery
+            - logs:UpdateLogDelivery
+            - logs:DeleteLogDelivery
+            - logs:ListLogDeliveries
+            - logs:PutResourcePolicy
+            - logs:DescribeResourcePolicies
+            - logs:DescribeLogGroups
+            Resource: "*"
+    DependsOn: []
+  NestedStackPollerStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub 'NeMo-StackPoller-${datazoneEnvironmentProjectId}'
+      RoleArn: !GetAtt StepFunctionsRole.Arn
+      DefinitionString: |
+        {
+          "Comment": "Poll CloudFormation stack and send callback when complete",
+          "StartAt": "Wait",
+          "States": {
+            "Wait": {
+              "Type": "Wait",
+              "Seconds": 30,
+              "Next": "CheckStackStatus"
+            },
+            "CheckStackStatus": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::aws-sdk:cloudformation:describeStacks",
+              "Parameters": {
+                "StackName.$": "$.StackName"
+              },
+              "ResultPath": "$.StackResult",
+              "Next": "EvaluateStatus",
+              "Catch": [{
+                "ErrorEquals": ["States.ALL"],
+                "ResultPath": "$.Error",
+                "Next": "HandleError"
+              }]
+            },
+            "EvaluateStatus": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Or": [
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "CREATE_COMPLETE"},
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "UPDATE_COMPLETE"}
+                  ],
+                  "Next": "SendSuccessCallback"
+                },
+                {
+                  "And": [
+                    {"Variable": "$.IsDelete", "IsPresent": true},
+                    {"Variable": "$.IsDelete", "BooleanEquals": true},
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "DELETE_COMPLETE"}
+                  ],
+                  "Next": "SendSuccessCallback"
+                },
+                {
+                  "Or": [
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "CREATE_FAILED"},
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "UPDATE_FAILED"},
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "ROLLBACK_COMPLETE"},
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "ROLLBACK_FAILED"},
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "UPDATE_ROLLBACK_COMPLETE"},
+                    {"Variable": "$.StackResult.Stacks[0].StackStatus", "StringEquals": "DELETE_FAILED"}
+                  ],
+                  "Next": "SendFailureCallback"
+                }
+              ],
+              "Default": "Wait"
+            },
+            "SendSuccessCallback": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName.$": "$.CallbackFunctionArn",
+                "Payload": {
+                  "Status": "SUCCESS",
+                  "StackName.$": "$.StackName",
+                  "ParamName.$": "$.ParamName",
+                  "Outputs.$": "$.StackResult.Stacks[0].Outputs"
+                }
+              },
+              "End": true
+            },
+            "SendFailureCallback": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName.$": "$.CallbackFunctionArn",
+                "Payload": {
+                  "Status": "FAILED",
+                  "StackName.$": "$.StackName",
+                  "ParamName.$": "$.ParamName",
+                  "StackStatus.$": "$.StackResult.Stacks[0].StackStatus"
+                }
+              },
+              "End": true
+            },
+            "HandleError": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "And": [
+                    {"Variable": "$.IsDelete", "IsPresent": true},
+                    {"Variable": "$.IsDelete", "BooleanEquals": true}
+                  ],
+                  "Next": "SendDeleteSuccessCallback"
+                }
+              ],
+              "Default": "SendErrorCallback"
+            },
+            "SendDeleteSuccessCallback": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName.$": "$.CallbackFunctionArn",
+                "Payload": {
+                  "Status": "SUCCESS",
+                  "StackName.$": "$.StackName",
+                  "ParamName.$": "$.ParamName"
+                }
+              },
+              "End": true
+            },
+            "SendErrorCallback": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName.$": "$.CallbackFunctionArn",
+                "Payload": {
+                  "Status": "FAILED",
+                  "StackName.$": "$.StackName",
+                  "ParamName.$": "$.ParamName",
+                  "Error.$": "$.Error"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+    DependsOn: []
+  NestedStackDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: NestedStackDeployPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - ssm:PutParameter
+            - ssm:GetParameter
+            - ssm:DeleteParameter
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/nemo-hyperpod/cfn-callback/HyperPod-*-${datazoneEnvironmentProjectId}'
+          - Effect: Allow
+            Action: states:StartExecution
+            Resource: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:NeMo-StackPoller-${datazoneEnvironmentProjectId}'
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      - !Sub 'arn:aws:iam::${AWS::AccountId}:policy/NeMoNestedStackDeployerPolicy'
+    DependsOn: []
+  NestedStackDeployFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: NestedStackCallbackFunction
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 300
+      Role: !GetAtt NestedStackDeployRole.Arn
+      Environment:
+        Variables:
+          STATE_MACHINE_ARN: !Sub 'arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:NeMo-StackPoller-${datazoneEnvironmentProjectId}'
+          CALLBACK_FUNCTION_ARN: !GetAtt NestedStackCallbackFunction.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          import urllib.request
+
+          def send_response(event, status, data=None, reason=None):
+              body = json.dumps({
+                  'Status': status,
+                  'Reason': reason or 'See CloudWatch logs',
+                  'PhysicalResourceId': event.get('PhysicalResourceId', event['LogicalResourceId']),
+                  'StackId': event['StackId'],
+                  'RequestId': event['RequestId'],
+                  'LogicalResourceId': event['LogicalResourceId'],
+                  'Data': data or {}
+              })
+              req = urllib.request.Request(event['ResponseURL'], data=body.encode(), method='PUT', headers={'Content-Type': ''})
+              urllib.request.urlopen(req)
+
+          def handler(event, context):
+              cfn = boto3.client('cloudformation')
+              ssm = boto3.client('ssm')
+              sfn = boto3.client('stepfunctions')
+              props = event['ResourceProperties']
+              stack_name = props['StackName']
+              param_name = f"/nemo-hyperpod/cfn-callback/{stack_name}"
+              dev_mode = str(props.get('DevModeDisableRollback', 'false')).strip().lower() in ('1', 'true', 'yes')
+              
+              if event['RequestType'] == 'Delete':
+                  if dev_mode:
+                      print("DevModeDisableRollback enabled; skipping nested stack delete")
+                      send_response(event, 'SUCCESS', reason='DevModeDisableRollback enabled; skipping delete')
+                      return
+                  try:
+                      try:
+                          cfn.describe_stacks(StackName=stack_name)
+                      except:
+                          send_response(event, 'SUCCESS')
+                          return
+                      
+                      # Store callback and start delete
+                      callback_data = {
+                          'ResponseURL': event['ResponseURL'],
+                          'StackId': event['StackId'],
+                          'RequestId': event['RequestId'],
+                          'LogicalResourceId': event['LogicalResourceId'],
+                          'PhysicalResourceId': stack_name,
+                          'IsDelete': True
+                      }
+                      ssm.put_parameter(Name=param_name, Value=json.dumps(callback_data), Type='String', Overwrite=True)
+                      cfn.delete_stack(StackName=stack_name)
+                      
+                      # Start poller for delete
+                      sfn.start_execution(
+                          stateMachineArn=os.environ['STATE_MACHINE_ARN'],
+                          input=json.dumps({
+                              'StackName': stack_name,
+                              'ParamName': param_name,
+                              'IsDelete': True,
+                              'CallbackFunctionArn': os.environ['CALLBACK_FUNCTION_ARN']
+                          })
+                      )
+                      print(f"Started delete and poller for {stack_name}")
+                  except Exception as e:
+                      print(f"Delete error: {e}")
+                      send_response(event, 'SUCCESS')
+                  return
+              
+              try:
+                  # Store callback info
+                  callback_data = {
+                      'ResponseURL': event['ResponseURL'],
+                      'StackId': event['StackId'],
+                      'RequestId': event['RequestId'],
+                      'LogicalResourceId': event['LogicalResourceId'],
+                      'PhysicalResourceId': stack_name
+                  }
+                  ssm.put_parameter(Name=param_name, Value=json.dumps(callback_data), Type='String', Overwrite=True)
+                  
+                  params = [{'ParameterKey': k, 'ParameterValue': str(v)} for k, v in props['Parameters'].items() if v is not None and str(v) != '']
+                  base_args = {
+                      'StackName': stack_name,
+                      'TemplateURL': props['TemplateURL'],
+                      'Parameters': params,
+                      'Capabilities': ['CAPABILITY_IAM', 'CAPABILITY_NAMED_IAM', 'CAPABILITY_AUTO_EXPAND']
+                  }
+                  
+                  try:
+                      cfn.describe_stacks(StackName=stack_name)
+                      cfn.update_stack(**base_args)
+                      print(f"Started stack update: {stack_name}")
+                  except Exception as e:
+                      if 'does not exist' in str(e):
+                          create_args = dict(base_args)
+                          if dev_mode:
+                              create_args['DisableRollback'] = True
+                          cfn.create_stack(**create_args, TimeoutInMinutes=120)
+                          print(f"Started stack create: {stack_name}")
+                      elif 'No updates' in str(e):
+                          resp = cfn.describe_stacks(StackName=stack_name)
+                          outputs = {o['OutputKey']: o['OutputValue'] for o in resp['Stacks'][0].get('Outputs', [])}
+                          ssm.delete_parameter(Name=param_name)
+                          send_response(event, 'SUCCESS', outputs)
+                          return
+                      else:
+                          raise
+                  
+                  # Start Step Functions poller
+                  sfn.start_execution(
+                      stateMachineArn=os.environ['STATE_MACHINE_ARN'],
+                      input=json.dumps({
+                          'StackName': stack_name,
+                          'ParamName': param_name,
+                          'CallbackFunctionArn': os.environ['CALLBACK_FUNCTION_ARN']
+                      })
+                  )
+                  print(f"Started poller for {stack_name}")
+              except Exception as e:
+                  print(f"Error: {e}")
+                  try:
+                      ssm.delete_parameter(Name=param_name)
+                  except:
+                      pass
+                  send_response(event, 'FAILED', reason=str(e))
+  NestedStackCallbackFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 60
+      Role: !GetAtt NestedStackDeployRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import urllib.request
+
+          def handler(event, context):
+              print(f"Callback event: {json.dumps(event)}")
+              ssm = boto3.client('ssm')
+              cfn = boto3.client('cloudformation')
+              
+              param_name = event['ParamName']
+              stack_name = event['StackName']
+              status = event['Status']
+              
+              try:
+                  callback_data = json.loads(ssm.get_parameter(Name=param_name)['Parameter']['Value'])
+              except Exception as e:
+                  print(f"No callback data: {e}")
+                  return {'statusCode': 404}
+              
+              is_delete = callback_data.get('IsDelete', False)
+              
+              if status == 'SUCCESS':
+                  outputs = {}
+                  if not is_delete and 'Outputs' in event:
+                      outputs = {o['OutputKey']: o['OutputValue'] for o in (event.get('Outputs') or [])}
+                  cfn_status = 'SUCCESS'
+                  reason = None
+              else:
+                  outputs = {}
+                  cfn_status = 'FAILED'
+                  if 'Error' in event:
+                      reason = str(event['Error'])
+                  elif 'StackStatus' in event:
+                      reason = f"Stack ended with status: {event['StackStatus']}"
+                      # Try to get failure details
+                      try:
+                          events = cfn.describe_stack_events(StackName=stack_name)['StackEvents']
+                          failures = [e for e in events if 'FAILED' in e.get('ResourceStatus', '')]
+                          if failures:
+                              reason = '; '.join([f"{f['LogicalResourceId']}: {f.get('ResourceStatusReason', 'Unknown')}" for f in failures[:3]])
+                      except:
+                          pass
+                  else:
+                      reason = 'Unknown error'
+              
+              body = json.dumps({
+                  'Status': cfn_status,
+                  'Reason': reason or 'See CloudWatch logs',
+                  'PhysicalResourceId': callback_data['PhysicalResourceId'],
+                  'StackId': callback_data['StackId'],
+                  'RequestId': callback_data['RequestId'],
+                  'LogicalResourceId': callback_data['LogicalResourceId'],
+                  'Data': outputs
+              })
+              
+              req = urllib.request.Request(callback_data['ResponseURL'], data=body.encode(), method='PUT', headers={'Content-Type': ''})
+              urllib.request.urlopen(req)
+              print(f"Sent {cfn_status} callback")
+              
+              ssm.delete_parameter(Name=param_name)
+              return {'statusCode': 200}
+    DependsOn: []
+  HyperPodMainStack:
+    Type: Custom::NestedStack
+    DependsOn:
+    - VpcLookup
+    - NestedStackPollerStateMachine
+    - SettingsCombiner
+    Properties:
+      ServiceToken: !GetAtt NestedStackDeployFunction.Arn
+      StackName: !Sub 'HyperPod-${HyperPodClusterName}-${datazoneEnvironmentProjectId}'
+      TemplateURL: !Sub
+      - https://${Bucket}.s3.${AWS::Region}.amazonaws.com/templates/main-stack-eks-based-template.yaml
+      - Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+      Parameters:
+        CustomBucketName: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        ResourceNamePrefix: !Sub '${HyperPodClusterName}-${datazoneEnvironmentProjectId}'
+        HyperPodClusterName: !Sub '${HyperPodClusterName}-${datazoneEnvironmentProjectId}'
+        AvailabilityZoneIds: !GetAtt VpcLookup.AvailabilityZoneIds
+        AvailabilityZones: !GetAtt VpcLookup.AvailabilityZones
+        EksAvailabilityZones: !GetAtt VpcLookup.EksAZs
+        KubernetesVersion: !Ref KubernetesVersion
+        CreateVPCStack: "false"
+        CreateSecurityGroupStack: "false"
+        CreateS3EndpointStack: "false"
+        VpcId: !GetAtt VpcLookup.VpcId
+        PrivateSubnetIds: !Ref privateSubnets
+        EksPrivateSubnetIds: !GetAtt VpcLookup.EksSubnetIds
+        SecurityGroupIds: !ImportValue
+          Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+        NfsSecurityGroupId: !GetAtt VpcLookup.NfsSecurityGroupId
+        CreateEKSClusterStack: "true"
+        CreateHelmChartStack: "true"
+        CreateS3BucketStack: "true"
+        CreateLifeCycleScriptStack: "true"
+        CreateSageMakerIAMRoleStack: "true"
+        CreateHyperPodClusterStack: "true"
+        CreateTaskGovernanceClusterPolicyStack: !Ref EnableTaskGovernance
+        TaskGovernanceAddonVersion: ""
+        TaskGovernanceAddonLambdaExportSuffix: !Ref datazoneEnvironmentProjectId
+        TaskGovernanceComputeQuotaInstanceType: !If
+          - HasTaskGovernanceComputeQuotaInstanceType
+          - !Ref TaskGovernanceComputeQuotaInstanceType
+          - !Ref InstanceType1
+        TaskGovernanceComputeQuotaInstanceCount: !Ref TaskGovernanceComputeQuotaInstanceCount
+        TaskGovernanceComputeQuotaFairShareWeight: !Ref TaskGovernanceComputeQuotaFairShareWeight
+        TaskGovernanceComputeQuotaBorrowLimit: !Ref TaskGovernanceComputeQuotaBorrowLimit
+        TaskGovernanceComputeQuotaSharingStrategy: !Ref TaskGovernanceComputeQuotaSharingStrategy
+        TaskGovernanceComputeQuotaPreemptTeamTasks: !Ref TaskGovernanceComputeQuotaPreemptTeamTasks
+        DevModeDisableRollback: !Ref DevModeDisableRollback
+        FsxAvailabilityZoneId: !GetAtt VpcLookup.AZ6
+        NodeRecovery: Automatic
+        NodeProvisioningMode: Continuous
+        AutoScalerType: Karpenter
+        EnableHPTrainingOperatorFeature: "true"
+        EnableObservabilityFeature: "true"
+        EnableSpacesFeature: !Ref EnableSpacesFeature
+        CreateHyperPodObservabilityRole: "true"
+        CreateGrafanaRole: "true"
+        CreatePrometheusWorkspace: "true"
+        CreateGrafanaWorkspace: "true"
+        StorageCapacity: !If [CreateFSx, !Ref FSxStorageCapacity, ""]
+        PerUnitStorageThroughput: !If [CreateFSx, !Ref FSxPerUnitStorageThroughput, ""]
+        FsxRootSquashUidGid: !If [CreateFSx, !Ref FSxRootSquashUidGid, ""]
+        FsxNoSquashNids: !If [CreateFSx, !Ref FSxNoSquashNids, ""]
+        DataScientistRole1: !Select
+          - 1
+          - !Split
+            - /
+            - !Ref userRoleArn
+        UserNamespaces: !If
+          - HasUserNamespaces
+          - !Ref UserNamespaces
+          - hyperpod-ns-datascientist1
+        DataScientistRole1Namespaces: !If
+          - HasCustomUserNamespaces
+          - !If
+            - HasUserNamespaces
+            - !Join [",", [!Ref UserNamespaces, !Ref CustomUserNamespaces]]
+            - !Join [",", ["hyperpod-ns-datascientist1", !Ref CustomUserNamespaces]]
+          - !If
+            - HasUserNamespaces
+            - !Ref UserNamespaces
+            - hyperpod-ns-datascientist1
+        CustomUserNamespaces: !Ref CustomUserNamespaces
+        InstanceGroupSettingsSSMParam: !GetAtt SettingsCombiner.InstanceGroupSettingsParam
+        RigSettingsSSMParam: !GetAtt SettingsCombiner.RigSettingsParam
+        InstanceGroupSettings1: !If
+          - HasInstanceGroupSettings1
+          - !Ref InstanceGroupSettings1
+          - !Sub
+            - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+            - AZ: !GetAtt VpcLookup.AZ1
+              Type: !Ref InstanceType1
+              SG: !ImportValue
+                Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+              Subnet: !GetAtt VpcLookup.Subnet1
+        InstanceGroupSettings2: !If
+          - HasInstanceGroupSettings2
+          - !Ref InstanceGroupSettings2
+          - !Sub
+            - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+            - AZ: !GetAtt VpcLookup.AZ2
+              Type: !Ref InstanceType1
+              SG: !ImportValue
+                Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+              Subnet: !GetAtt VpcLookup.Subnet2
+        InstanceGroupSettings3: !If
+          - HasInstanceGroupSettings3
+          - !Ref InstanceGroupSettings3
+          - !Sub
+            - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+            - AZ: !GetAtt VpcLookup.AZ3
+              Type: !Ref InstanceType1
+              SG: !ImportValue
+                Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+              Subnet: !GetAtt VpcLookup.Subnet3
+        InstanceGroupSettings4: !If
+          - HasInstanceGroupSettings4
+          - !Ref InstanceGroupSettings4
+          - !Sub
+            - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+            - AZ: !GetAtt VpcLookup.AZ4
+              Type: !Ref InstanceType1
+              SG: !ImportValue
+                Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+              Subnet: !GetAtt VpcLookup.Subnet4
+        InstanceGroupSettings5: !If
+          - HasInstanceGroupSettings5
+          - !Ref InstanceGroupSettings5
+          - !Sub
+            - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+            - AZ: !GetAtt VpcLookup.AZ5
+              Type: !Ref InstanceType1
+              SG: !ImportValue
+                Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+              Subnet: !GetAtt VpcLookup.Subnet5
+        InstanceGroupSettings6: !If
+          - HasInstanceGroupSettings6
+          - !Ref InstanceGroupSettings6
+          - !Sub
+            - "[{\"InstanceGroupName\":\"worker-${AZ}\",\"InstanceType\":\"${Type}\",\"InstanceCount\":0,\"InstanceStorageConfigs\":[{\"EbsVolumeConfig\":{\"VolumeSizeInGB\":500}}],\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+            - AZ: !GetAtt VpcLookup.AZ6
+              Type: !Ref InstanceType1
+              SG: !ImportValue
+                Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+              Subnet: !GetAtt VpcLookup.Subnet6
+        InstanceGroupSettings7: !If
+          - HasInstanceGroupSettings7
+          - !Ref InstanceGroupSettings7
+          - "[]"
+        InstanceGroupSettings8: !If
+          - HasInstanceGroupSettings8
+          - !Ref InstanceGroupSettings8
+          - !If
+            - SpacesEnabled
+            - !Sub
+              - "[{\"InstanceGroupName\":\"workspace-cpu\",\"InstanceType\":\"ml.c5.2xlarge\",\"InstanceCount\":0,\"KubernetesConfig\":{\"Labels\":{\"node-role\":\"workspace-cpu\"}},\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+              - SG: !ImportValue
+                  Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+                Subnet: !GetAtt VpcLookup.Subnet1
+            - "[]"
+        InstanceGroupSettings9: !If
+          - HasInstanceGroupSettings9
+          - !Ref InstanceGroupSettings9
+          - !If
+            - SpacesEnabled
+            - !Sub
+              - "[{\"InstanceGroupName\":\"workspace-gpu\",\"InstanceType\":\"ml.g5.xlarge\",\"InstanceCount\":0,\"KubernetesConfig\":{\"Labels\":{\"node-role\":\"workspace-gpu\"}},\"OverrideVpcConfig\":{\"SecurityGroupIds\":[\"${SG}\"],\"Subnets\":[\"${Subnet}\"]}}]"
+              - SG: !ImportValue
+                  Fn::Sub: securityGroup-${datazoneEnvironmentProjectId}-${datazoneScopeName}
+                Subnet: !GetAtt VpcLookup.Subnet1
+            - "[]"
+        InstanceGroupSettings10: !If
+          - HasInstanceGroupSettings10
+          - !Ref InstanceGroupSettings10
+          - "[]"
+        InstanceGroupSettings11: !If
+          - HasInstanceGroupSettings11
+          - !Ref InstanceGroupSettings11
+          - "[]"
+        InstanceGroupSettings12: !If
+          - HasInstanceGroupSettings12
+          - !Ref InstanceGroupSettings12
+          - "[]"
+        InstanceGroupSettings13: !If
+          - HasInstanceGroupSettings13
+          - !Ref InstanceGroupSettings13
+          - "[]"
+        InstanceGroupSettings14: !If
+          - HasInstanceGroupSettings14
+          - !Ref InstanceGroupSettings14
+          - "[]"
+        InstanceGroupSettings15: !If
+          - HasInstanceGroupSettings15
+          - !Ref InstanceGroupSettings15
+          - "[]"
+        InstanceGroupSettings16: !If
+          - HasInstanceGroupSettings16
+          - !Ref InstanceGroupSettings16
+          - "[]"
+        InstanceGroupSettings17: !If
+          - HasInstanceGroupSettings17
+          - !Ref InstanceGroupSettings17
+          - "[]"
+        InstanceGroupSettings18: !If
+          - HasInstanceGroupSettings18
+          - !Ref InstanceGroupSettings18
+          - "[]"
+        InstanceGroupSettings19: !If
+          - HasInstanceGroupSettings19
+          - !Ref InstanceGroupSettings19
+          - "[]"
+        InstanceGroupSettings20: !If
+          - HasInstanceGroupSettings20
+          - !Ref InstanceGroupSettings20
+          - "[]"
+  SpaceSyncRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: SageMakerSpaceAccess
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - events:DisableRule
+            - sagemaker:CreateUserProfile
+            - sagemaker:CreateSpace
+            - sagemaker:DeleteApp
+            - sagemaker:StopApp
+            - sagemaker:DeleteSpace
+            - sagemaker:DescribeSpace
+            - sagemaker:DescribeDomain
+            - sagemaker:DeleteUserProfile
+            - sagemaker:DescribeUserProfile
+            - sagemaker:ListApps
+            - sagemaker:ListSpaces
+            - sagemaker:ListTags
+            - sagemaker:UpdateSpace
+            - sagemaker:UpdateUserProfile
+            - sagemaker:AddTags
+            Resource: "*"
+          - Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Ref userRoleArn
+            Condition:
+              StringEquals:
+                iam:PassedToService: sagemaker.amazonaws.com
+      - PolicyName: SpaceSyncDLQSend
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - sqs:SendMessage
+            Resource: !GetAtt SpaceSyncDLQ.Arn
+  SpaceSyncPrepareFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-prepare-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 120
+      Environment:
+        Variables:
+          TARGET_DOMAIN_ID: !ImportValue
+            Fn::Sub:
+            - sageMakerDomainId-${ToolingEnvId}-${ScopeName}
+            - ToolingEnvId: !Select
+              - 4
+              - !Split
+                - _
+                - !Select
+                  - 1
+                  - !Split [/, !Ref userRoleArn]
+              ScopeName: !Ref datazoneScopeName
+          PROJECT_ID: !Ref datazoneEnvironmentProjectId
+          SCOPE_NAME: !Ref datazoneScopeName
+          DZ_DOMAIN_ID: !Ref datazoneEnvironmentDomainId
+          FSX_FILESYSTEM_ID: !If [CreateFSx, !GetAtt HyperPodMainStack.OutputFsxFileSystemId, ""]
+          S3_BUCKET_ARN: !Ref s3BucketArn
+          SPACE_SYNC_RULE_NAME: !Sub 'nemo-space-sync-${datazoneEnvironmentProjectId}'
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-prepare-lambda-function.zip
+  SpaceSyncPrepareUpdateFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-prepare-update-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 120
+      Environment:
+        Variables:
+          PROJECT_ID: !Ref datazoneEnvironmentProjectId
+          SCOPE_NAME: !Ref datazoneScopeName
+          FSX_FILESYSTEM_ID: !If [CreateFSx, !GetAtt HyperPodMainStack.OutputFsxFileSystemId, ""]
+          S3_BUCKET_ARN: !Ref s3BucketArn
+          SPACE_SYNC_ROLE_ARN: !GetAtt SpaceSyncRole.Arn
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-prepare_update-lambda-function.zip
+  SpaceSyncStopAppsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-stop-apps-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 120
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-stop_apps-lambda-function.zip
+  SpaceSyncDeleteAppsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-delete-apps-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 120
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-delete_apps-lambda-function.zip
+  SpaceSyncCheckAppsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-check-apps-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 60
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-check_apps-lambda-function.zip
+  SpaceSyncDeleteSpaceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-delete-space-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 60
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-delete_space-lambda-function.zip
+  SpaceSyncCheckSpaceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-check-space-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 60
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-check_space-lambda-function.zip
+  SpaceSyncDeleteProfileFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-delete-profile-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 60
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-delete_profile-lambda-function.zip
+  SpaceSyncCheckProfileFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-check-profile-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 60
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-check_profile-lambda-function.zip
+  SpaceSyncCreateProfileFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-create-profile-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 120
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-create_profile-lambda-function.zip
+  SpaceSyncCreateSpaceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-create-space-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 120
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-create_space-lambda-function.zip
+  SpaceSyncUpdateSpaceFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-update-space-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncRole.Arn
+      Timeout: 120
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/nemo-space-sync-update_space-lambda-function.zip
+  SpaceSyncStateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: states.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: SpaceSyncStateMachinePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource:
+              - !GetAtt SpaceSyncPrepareFunction.Arn
+              - !GetAtt SpaceSyncPrepareUpdateFunction.Arn
+              - !GetAtt SpaceSyncStopAppsFunction.Arn
+              - !GetAtt SpaceSyncDeleteAppsFunction.Arn
+              - !GetAtt SpaceSyncCheckAppsFunction.Arn
+              - !GetAtt SpaceSyncDeleteSpaceFunction.Arn
+              - !GetAtt SpaceSyncCheckSpaceFunction.Arn
+              - !GetAtt SpaceSyncDeleteProfileFunction.Arn
+              - !GetAtt SpaceSyncCheckProfileFunction.Arn
+              - !GetAtt SpaceSyncCreateProfileFunction.Arn
+              - !GetAtt SpaceSyncCreateSpaceFunction.Arn
+              - !GetAtt SpaceSyncUpdateSpaceFunction.Arn
+          - Effect: Allow
+            Action:
+            - logs:CreateLogDelivery
+            - logs:GetLogDelivery
+            - logs:UpdateLogDelivery
+            - logs:DeleteLogDelivery
+            - logs:ListLogDeliveries
+            - logs:PutResourcePolicy
+            - logs:DescribeResourcePolicies
+            - logs:DescribeLogGroups
+            Resource: "*"
+  SpaceSyncStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub 'NeMo-SpaceSync-${datazoneEnvironmentProjectId}'
+      StateMachineType: STANDARD
+      RoleArn: !GetAtt SpaceSyncStateMachineRole.Arn
+      DefinitionString: !Sub |
+        {
+          "StartAt": "Prepare",
+          "States": {
+            "Prepare": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncPrepareFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "ChooseAction"
+            },
+            "ChooseAction": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.action",
+                  "StringEquals": "skip",
+                  "Next": "Done"
+                },
+                {
+                  "Variable": "$.action",
+                  "StringEquals": "update_space",
+                  "Next": "UpdateSpace"
+                },
+                {
+                  "Variable": "$.action",
+                  "StringEquals": "recreate_profile",
+                  "Next": "DeleteApps"
+                }
+              ],
+              "Default": "Done"
+            },
+            "UpdateSpace": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncUpdateSpaceFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "UpdateSpaceResult"
+            },
+            "UpdateSpaceResult": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "ok",
+                  "Next": "Done"
+                },
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "noop",
+                  "Next": "Done"
+                },
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "retry_apps",
+                  "Next": "DeleteApps"
+                },
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "retry_profile",
+                  "Next": "DeleteApps"
+                },
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "wait_space",
+                  "Next": "WaitSpaceThenUpdate"
+                }
+              ],
+              "Default": "Done"
+            },
+            "WaitSpaceThenUpdate": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "UpdateSpace"
+            },
+            "DeleteApps": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncDeleteAppsFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "WaitApps"
+            },
+            "WaitApps": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "CheckApps"
+            },
+            "CheckApps": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncCheckAppsFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "AppsGone"
+            },
+            "AppsGone": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.apps_remaining",
+                  "NumericEquals": 0,
+                  "Next": "AfterApps"
+                }
+              ],
+              "Default": "DeleteApps"
+            },
+            "AfterApps": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.next_step",
+                  "StringEquals": "update_space",
+                  "Next": "UpdateSpace"
+                },
+                {
+                  "Variable": "$.next_step",
+                  "StringEquals": "delete_space",
+                  "Next": "DeleteSpace"
+                }
+              ],
+              "Default": "DeleteSpace"
+            },
+            "DeleteSpace": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncDeleteSpaceFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "SpaceDeleteRetry"
+            },
+            "SpaceDeleteRetry": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.space_delete_retry",
+                  "BooleanEquals": true,
+                  "Next": "DeleteApps"
+                }
+              ],
+              "Default": "WaitSpace"
+            },
+            "WaitSpace": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "CheckSpace"
+            },
+            "CheckSpace": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncCheckSpaceFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "SpaceGone"
+            },
+            "SpaceGone": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.space_exists",
+                  "BooleanEquals": false,
+                  "Next": "DeleteProfile"
+                }
+              ],
+              "Default": "WaitSpace"
+            },
+            "DeleteProfile": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncDeleteProfileFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "WaitProfileDeleted"
+            },
+            "WaitProfileDeleted": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "CheckProfileDeleted"
+            },
+            "CheckProfileDeleted": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncCheckProfileFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "ProfileDeleted"
+            },
+            "ProfileDeleted": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.profile_exists",
+                  "BooleanEquals": false,
+                  "Next": "CreateProfile"
+                }
+              ],
+              "Default": "WaitProfileDeleted"
+            },
+            "CreateProfile": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncCreateProfileFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "WaitProfileReady"
+            },
+            "WaitProfileReady": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "CheckProfileReady"
+            },
+            "CheckProfileReady": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncCheckProfileFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "ProfileReady"
+            },
+            "ProfileReady": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.profile_status",
+                  "StringEquals": "InService",
+                  "Next": "CreateSpace"
+                }
+              ],
+              "Default": "WaitProfileReady"
+            },
+            "CreateSpace": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncCreateSpaceFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "Done"
+            },
+            "Done": {
+              "Type": "Succeed"
+            }
+          }
+        }
+  SpaceSyncUpdateStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub 'NeMo-SpaceSync-Update-${datazoneEnvironmentProjectId}'
+      StateMachineType: STANDARD
+      RoleArn: !GetAtt SpaceSyncStateMachineRole.Arn
+      DefinitionString: !Sub |
+        {
+          "StartAt": "PrepareUpdate",
+          "States": {
+            "PrepareUpdate": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncPrepareUpdateFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "ChooseAction"
+            },
+            "ChooseAction": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.action",
+                  "StringEquals": "skip",
+                  "Next": "Done"
+                }
+              ],
+              "Default": "UpdateSpace"
+            },
+            "UpdateSpace": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncUpdateSpaceFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "UpdateSpaceResult"
+            },
+            "UpdateSpaceResult": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "ok",
+                  "Next": "Done"
+                },
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "noop",
+                  "Next": "Done"
+                },
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "retry_apps",
+                  "Next": "StopApps"
+                },
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "retry_profile",
+                  "Next": "ProfileUpdateRequired"
+                },
+                {
+                  "Variable": "$.update_space_action",
+                  "StringEquals": "wait_space",
+                  "Next": "WaitSpaceThenUpdate"
+                }
+              ],
+              "Default": "Done"
+            },
+            "WaitSpaceThenUpdate": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "UpdateSpace"
+            },
+            "StopApps": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncStopAppsFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "WaitAppsStopped"
+            },
+            "WaitAppsStopped": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "CheckApps"
+            },
+            "CheckApps": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${SpaceSyncCheckAppsFunction}",
+                "Payload.$": "$"
+              },
+              "OutputPath": "$.Payload",
+              "Next": "AppsStopped"
+            },
+            "AppsStopped": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.apps_blocking_update",
+                  "NumericEquals": 0,
+                  "Next": "UpdateSpace"
+                }
+              ],
+              "Default": "WaitAppsStopped"
+            },
+            "ProfileUpdateRequired": {
+              "Type": "Succeed"
+            },
+            "Done": {
+              "Type": "Succeed"
+            }
+          }
+        }
+  SpaceSyncEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: events.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: SpaceSyncEventStartExecution
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action: states:StartExecution
+            Resource: !Ref SpaceSyncStateMachine
+  SpaceSyncRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub 'nemo-space-sync-${datazoneEnvironmentProjectId}'
+      EventPattern:
+        source:
+        - aws.sagemaker
+        detail-type:
+        - AWS API Call via CloudTrail
+        detail:
+          eventName:
+          - CreateSpace
+      State: ENABLED
+      Targets:
+      - Id: SpaceSyncStateMachine
+        Arn: !Ref SpaceSyncStateMachine
+        RoleArn: !GetAtt SpaceSyncEventRole.Arn
+        DeadLetterConfig:
+          Arn: !GetAtt SpaceSyncDLQ.Arn
+  SpaceSyncUpdateEventRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: events.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: SpaceSyncUpdateEventStartExecution
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action: states:StartExecution
+            Resource: !Ref SpaceSyncUpdateStateMachine
+  SpaceSyncUpdateRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub 'nemo-space-sync-update-${datazoneEnvironmentProjectId}'
+      EventPattern:
+        source:
+        - aws.sagemaker
+        detail-type:
+        - AWS API Call via CloudTrail
+        detail:
+          eventName:
+          - UpdateSpace
+      State: ENABLED
+      Targets:
+      - Id: SpaceSyncUpdateStateMachine
+        Arn: !Ref SpaceSyncUpdateStateMachine
+        RoleArn: !GetAtt SpaceSyncUpdateEventRole.Arn
+  SpaceSyncDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'nemo-space-sync-dlq-${datazoneEnvironmentProjectId}'
+      MessageRetentionPeriod: 1209600
+  SpaceSyncDLQPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref SpaceSyncDLQ
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowEventBridgeSend
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt SpaceSyncDLQ.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !GetAtt SpaceSyncRule.Arn
+  SpaceSyncReplayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: SpaceSyncReplayAccess
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            - sqs:GetQueueUrl
+            Resource: !GetAtt SpaceSyncDLQ.Arn
+          - Effect: Allow
+            Action:
+            - states:StartExecution
+            Resource: !Ref SpaceSyncStateMachine
+  SpaceSyncReplayFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'nemo-space-sync-replay-${datazoneEnvironmentProjectId}-r2'
+      Runtime: python3.12
+      Handler: lambda_function.handler
+      Role: !GetAtt SpaceSyncReplayRole.Arn
+      Timeout: 300
+      Environment:
+        Variables:
+          DLQ_URL: !Ref SpaceSyncDLQ
+          TARGET_STATE_MACHINE_ARN: !Ref SpaceSyncStateMachine
+          MAX_MESSAGES: "100"
+          BATCH_SIZE: "10"
+          DELETE_ON_SUCCESS: "true"
+      Code:
+        S3Bucket: !If [UseDefaultNestedStackBucket, !Sub 'nemo-hyperpod-templates-${AWS::AccountId}-${AWS::Region}', !Ref NestedStackBucket]
+        S3Key: resources/artifacts/space-sync-replay-lambda-function.zip
+  SpaceSyncDescribeFSxPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateFSx
+    DependsOn: HyperPodMainStack
+    Properties:
+      PolicyName: SpaceSyncDescribeFSx
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: fsx:DescribeFileSystems
+            Resource: "*"
+      Roles:
+        - !Ref SpaceSyncRole
+  GetToolingEnvRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: ListEnvironmentsAndExports
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: Allow
+            Action: datazone:ListEnvironments
+            Resource: "*"
+          - Effect: Allow
+            Action: cloudformation:ListExports
+            Resource: "*"
+  GetToolingEnvironmentFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 60
+      Role: !GetAtt GetToolingEnvRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+
+          def handler(event, context):
+              if event['RequestType'] == 'Delete':
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+                  return
+
+              try:
+                  props = event['ResourceProperties']
+                  dz = boto3.client('datazone')
+                  cfn = boto3.client('cloudformation')
+
+                  envs = []
+                  paginator = dz.get_paginator('list_environments')
+                  for page in paginator.paginate(
+                      domainIdentifier=props['DomainId'],
+                      projectIdentifier=props['ProjectId']
+                  ):
+                      envs.extend(page.get('items', []))
+
+                  # Find Tooling environment
+                  tooling_env_id = None
+                  env_name = ''
+                  for env in envs:
+                      name = env.get('name', '').lower()
+                      if 'tooling' in name or 'default' in name:
+                          tooling_env_id = env['id']
+                          env_name = env.get('name', '')
+                          break
+
+                  if not tooling_env_id and envs:
+                      tooling_env_id = envs[0]['id']
+                      env_name = envs[0].get('name', '')
+
+                  if not tooling_env_id:
+                      cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': 'No environments found'})
+                      return
+
+                  # Look up SageMaker Domain ID from exports
+                  export_name = f'sageMakerDomainId-{tooling_env_id}-dev'
+                  sm_domain_id = ''
+                  for page in cfn.get_paginator('list_exports').paginate():
+                      for exp in page['Exports']:
+                          if exp['Name'] == export_name:
+                              sm_domain_id = exp['Value']
+                              break
+                      if sm_domain_id:
+                          break
+
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {
+                      'ToolingEnvironmentId': tooling_env_id,
+                      'EnvironmentName': env_name,
+                      'SageMakerDomainId': sm_domain_id
+                  })
+              except Exception as e:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
+  GetToolingEnvironment:
+    Type: Custom::GetToolingEnv
+    Properties:
+      ServiceToken: !GetAtt GetToolingEnvironmentFunction.Arn
+      DomainId: !Ref datazoneEnvironmentDomainId
+      ProjectId: !Ref datazoneEnvironmentProjectId
+  UserRoleDescribeClusterPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: HyperPodMainStack
+    Properties:
+      PolicyName: HyperPodDescribeCluster
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sagemaker:DescribeCluster
+            Resource: !GetAtt HyperPodMainStack.OutputHyperPodClusterArn
+      Roles:
+        - !Select [1, !Split ["/", !Ref userRoleArn]]
+  UserRoleReadHyperPodSsmParamsPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: HyperPodMainStack
+    Properties:
+      PolicyName: HyperPodReadSsmParams
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParametersByPath
+              - ssm:GetParameter
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/sagemaker/hyperpod/*'
+      Roles:
+        - !Select [1, !Split ["/", !Ref userRoleArn]]
+  UserRoleReadLLMFTContainerParamPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: HyperPodMainStack
+    Properties:
+      PolicyName: HyperPodReadLLMFTContainerParam
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+            Resource: !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/sagemaker/hyperpod/${HyperPodClusterName}-${datazoneEnvironmentProjectId}/llmft-container-uri'
+      Roles:
+        - !Select [1, !Split ["/", !Ref userRoleArn]]
+  UserRoleReadHfAccessTokenSecretPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ReadHfAccessTokenSecret
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+              - secretsmanager:DescribeSecret
+            Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nemo-container-build/hf-access-token-*'
+      Roles:
+        - !Select [1, !Split ["/", !Ref userRoleArn]]
+  UserRoleEksAddonReadPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: HyperPodMainStack
+    Properties:
+      PolicyName: HyperPodEksAddonRead
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - eks:ListAddons
+            Resource: !GetAtt HyperPodMainStack.OutputEKSClusterArn
+          - Effect: Allow
+            Action:
+              - eks:DescribeAddon
+              - eks:DescribeCluster
+            Resource:
+              !Sub
+                - 'arn:aws:eks:${AWS::Region}:${AWS::AccountId}:addon/${EKSClusterName}/*'
+                - EKSClusterName: !GetAtt HyperPodMainStack.OutputEKSClusterName
+      Roles:
+        - !Select [1, !Split ["/", !Ref userRoleArn]]
+  UserRoleEksClusterDescribePolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: HyperPodMainStack
+    Properties:
+      PolicyName: HyperPodEksClusterDescribe
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - eks:DescribeCluster
+            Resource:
+              !Sub
+                - 'arn:aws:eks:${AWS::Region}:${AWS::AccountId}:cluster/${EKSClusterName}'
+                - EKSClusterName: !GetAtt HyperPodMainStack.OutputEKSClusterName
+      Roles:
+        - !Select [1, !Split ["/", !Ref userRoleArn]]
+  NeMoContainerParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sagemaker/hyperpod/${HyperPodClusterName}-${datazoneEnvironmentProjectId}/nemo-container-uri'
+      Description: NeMo Framework container URI for training jobs
+      Type: String
+      Value: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${NeMoContainerRepository}:${NeMoContainerTag}'
+      Tags:
+        Project: !Ref datazoneEnvironmentProjectId
+        Environment: !Ref datazoneEnvironmentEnvironmentId
+  LLMFTContainerParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/sagemaker/hyperpod/${HyperPodClusterName}-${datazoneEnvironmentProjectId}/llmft-container-uri'
+      Description: LLMFT custom container URI for training jobs
+      Type: String
+      Value: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${LLMFTContainerRepository}:${LLMFTContainerTag}'
+      Tags:
+        Project: !Ref datazoneEnvironmentProjectId
+        Environment: !Ref datazoneEnvironmentEnvironmentId
+  UserRoleDescribeFSxPolicy:
+    Type: AWS::IAM::Policy
+    Condition: CreateFSx
+    DependsOn: HyperPodMainStack
+    Properties:
+      PolicyName: HyperPodDescribeFSx
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: fsx:DescribeFileSystems
+            Resource: "*"
+      Roles:
+        - !Select [1, !Split ["/", !Ref userRoleArn]]
+  ConnectionCreatorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: ConnectionCreatorPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Sid: AssumeDomainOwner
+            Effect: Allow
+            Action:
+            - sts:AssumeRole
+            - sts:TagSession
+            Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/DataZoneDomainConnectionCreator'
+          - Sid: DataZoneConnection
+            Effect: Allow
+            Action:
+            - datazone:CreateConnection
+            - datazone:DeleteConnection
+            - datazone:GetConnection
+            Resource: "*"
+      Tags:
+      - Key: datazone:domainId
+        Value: !Ref datazoneEnvironmentDomainId
+      - Key: datazone:projectId
+        Value: !Ref datazoneEnvironmentProjectId
+  ConnectionCreatorFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: UserRoleDescribeClusterPolicy
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 120
+      Role: !GetAtt ConnectionCreatorRole.Arn
+      Environment:
+        Variables:
+          DOMAIN_ID: !Ref datazoneEnvironmentDomainId
+          PROJECT_ID: !Ref datazoneEnvironmentProjectId
+          TOOLING_ENVIRONMENT_ID: !GetAtt GetToolingEnvironment.ToolingEnvironmentId
+          DOMAIN_OWNER_ROLE_ARN: !Sub 'arn:aws:iam::${AWS::AccountId}:role/DataZoneDomainConnectionCreator'
+          LAMBDA_ROLE_ARN: !GetAtt ConnectionCreatorRole.Arn
+          CONNECTION_NAME: !Sub 'hyperpod-${HyperPodClusterName}-${datazoneEnvironmentProjectId}'
+          CLUSTER_NAME: !GetAtt HyperPodMainStack.OutputHyperPodClusterName
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          import urllib.request
+
+          def send_response(event, status, data=None, reason=None):
+              body = json.dumps({
+                  'Status': status,
+                  'Reason': reason or 'See CloudWatch logs',
+                  'PhysicalResourceId': data.get('connectionId', event.get('PhysicalResourceId', event['LogicalResourceId'])) if data else event.get('PhysicalResourceId', event['LogicalResourceId']),
+                  'StackId': event['StackId'],
+                  'RequestId': event['RequestId'],
+                  'LogicalResourceId': event['LogicalResourceId'],
+                  'Data': data or {}
+              })
+              req = urllib.request.Request(event['ResponseURL'], data=body.encode(), method='PUT', headers={'Content-Type': ''})
+              urllib.request.urlopen(req)
+
+          def handler(event, context):
+              print(f"Event: {json.dumps(event)}")
+
+              dz = boto3.client('datazone')
+              sts = boto3.client('sts')
+
+              domain_id = os.environ['DOMAIN_ID']
+              project_id = os.environ['PROJECT_ID']
+              tooling_env_id = os.environ['TOOLING_ENVIRONMENT_ID']
+              lambda_role_arn = os.environ['LAMBDA_ROLE_ARN']
+              cluster_name = os.environ['CLUSTER_NAME']
+              connection_name = os.environ['CONNECTION_NAME']
+
+              if event['RequestType'] == 'Delete':
+                  try:
+                      dz.delete_connection(domainIdentifier=domain_id, identifier=event['PhysicalResourceId'])
+                      print(f"Deleted connection: {event['PhysicalResourceId']}")
+                  except Exception as e:
+                      print(f"Connection deletion skipped: {e}")
+                  send_response(event, 'SUCCESS')
+                  return
+
+              try:
+                  print(f"Cluster name: {cluster_name}")
+
+                  # Assume domain owner to add Lambda as project member
+                  creds = sts.assume_role(
+                      RoleArn=os.environ['DOMAIN_OWNER_ROLE_ARN'],
+                      RoleSessionName='AddMember',
+                      Tags=[
+                          {'Key': 'datazone:domainId', 'Value': domain_id},
+                          {'Key': 'datazone:projectId', 'Value': project_id}
+                      ]
+                  )['Credentials']
+                  dz_owner = boto3.client('datazone',
+                      aws_access_key_id=creds['AccessKeyId'],
+                      aws_secret_access_key=creds['SecretAccessKey'],
+                      aws_session_token=creds['SessionToken']
+                  )
+
+                  # Create user profile for Lambda
+                  try:
+                      dz_owner.create_user_profile(domainIdentifier=domain_id, userIdentifier=lambda_role_arn, userType='IAM_ROLE')
+                      print("Created user profile")
+                  except Exception as e:
+                      if 'existing' in str(e).lower() or 'ValidationException' in str(e):
+                          print("User profile exists")
+                      else:
+                          raise
+
+                  # Add Lambda as project contributor
+                  try:
+                      dz_owner.create_project_membership(
+                          domainIdentifier=domain_id,
+                          projectIdentifier=project_id,
+                          designation='PROJECT_CONTRIBUTOR',
+                          member={'userIdentifier': lambda_role_arn}
+                      )
+                      print("Added as project contributor")
+                  except Exception as e:
+                      if 'Conflict' in str(e) or 'exists' in str(e).lower():
+                          print("Already project member")
+                      else:
+                          raise
+
+                  # Create connection
+                  resp = dz.create_connection(
+                      domainIdentifier=domain_id,
+                      environmentIdentifier=tooling_env_id,
+                      name=connection_name,
+                      props={'hyperPodProperties': {'clusterName': cluster_name}}
+                  )
+                  print(f"Created connection: {resp['connectionId']}")
+
+                  send_response(event, 'SUCCESS', {'connectionId': resp['connectionId'], 'clusterName': cluster_name})
+              except Exception as e:
+                  print(f"Error: {e}")
+                  send_response(event, 'FAILED', reason=str(e))
+  HyperPodConnection:
+    Type: Custom::DataZoneConnection
+    DependsOn: HyperPodMainStack
+    Properties:
+      ServiceToken: !GetAtt ConnectionCreatorFunction.Arn
+###only one output allowed
+Outputs:
+  HyperPodClusterArn:
+    Description: HyperPod Cluster ARN
+    Value: !GetAtt HyperPodMainStack.OutputHyperPodClusterArn
+    Export:
+      Name: !Sub 'hyperPodClusterArn-${datazoneEnvironmentProjectId}'
