@@ -12,6 +12,7 @@ STACK_NAME="nemo-container-pipeline"
 TEMPLATE_FILE="$PIPELINE_DIR/container-pipeline.yaml"
 DOCKERFILE_PATH="$PIPELINE_DIR/Dockerfile"
 LOGS_DIR="$PIPELINE_DIR/logs"
+IMAGE_TAG="${IMAGE_TAG:-25.11-eks}"
 
 # Verify source files exist
 [[ ! -f "$TEMPLATE_FILE" ]] && echo "ERROR: Template not found at $TEMPLATE_FILE" && exit 1
@@ -132,6 +133,7 @@ aws cloudformation deploy \
     --region "$AWS_REGION" \
     --profile "$AWS_PROFILE" \
     --parameter-overrides \
+        ImageTag="$IMAGE_TAG" \
         LLMFTScriptsImage="$LLMFT_SCRIPTS_IMAGE" \
         LLMFTScriptsRepositoryName="$LLMFT_SCRIPTS_REPO_NAME" \
     --no-fail-on-empty-changeset
