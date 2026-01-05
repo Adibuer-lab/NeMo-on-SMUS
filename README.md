@@ -15,9 +15,10 @@ This repo explores infrastructure and tooling to learn about NVIDIA NeMo on Sage
 
 - `blueprints/`: SMUS blueprint template and setup scripts.
 - `domain-vpc/`: CloudFormation for VPC endpoints used by the blueprint.
-- `llmft-container-pipeline/`: CodeBuild/ECR pipeline to build and publish the LLMFT custom container images.
+- `*-container-pipeline/`: CodeBuild/ECR pipeline to build and publish the container images.
 - `sagemaker-hyperpod-cluster-setup/`: HyperPod/EKS CloudFormation templates and Lambda artifacts (submodule).
 - `sagemaker-hyperpod-recipes/`: Recipes and launcher used by the notebook workflows.
+- `sagemaker-hyperpod-training-adapter-for-nemo/`: 
 - `notebooks/`: Runnable exploration and training examples.
 
 ## Prerequisites
@@ -51,7 +52,7 @@ This repo explores infrastructure and tooling to learn about NVIDIA NeMo on Sage
 - `make provisioning-policy`: create/update `DataZoneProvisioningRolePolicy` and attach it to `AmazonSageMakerProvisioning-<acct>` (S3 templates bucket, IAM role mgmt, Lambda/StepFunctions/SSM, EventBridge + SQS for space sync, SM user profiles/spaces, EKS access entries).
 - `make nested-stack-policy`: create/update `NeMoNestedStackDeployerPolicy` (CloudFormation/EC2/VPC/EKS/SageMaker/FSx/Grafana/Prometheus/IAM/ECR/etc.) used by the nested stack deployer Lambda.
 - `make domain-role`: create/update the `DataZoneDomainConnectionCreator` role with a trust policy for DataZone env ConnectionCreator roles, attach its inline policy, and register it in the DataZone domain as a user profile + root owner.
-- `make llmft-container-build`: deploy the LLMFT container pipeline and trigger an image build.
+- `make container-build`: deploy the nemo container pipeline and trigger an image build.
 - `make setup-all`: run `provisioning-policy`, `nested-stack-policy`, `sync`, then `blueprint` for the current env.
 
 
