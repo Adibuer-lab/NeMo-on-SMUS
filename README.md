@@ -1,61 +1,80 @@
 # NeMo on SMUS (SageMaker Unified Studio + HyperPod)
 
-This repo explores infrastructure and tooling to learn about NVIDIA NeMo on SageMaker Unified Studio using SageMaker HyperPod on EKS. It explores it from the perspective of providing standardised tooling for AI engineers, centralised governance and speedy enablement of LLMOps at scale. It includes:
+## What This Explores
 
-- An SMUS blueprint that provisions a HyperPod cluster, FSx for Lustre, task governance/Kueue, and optional SageMaker Spaces integration.
-- Infrastructure pipelines for customising NeMo/LLMFT container images.
-- Notebooks that validate shared storage, container discovery, add-ons, and run recipes-based training/inference workflows.
+Distributed LLM training, fine-tuning, and serving are complex. Teams need GPUs, shared storage, job scheduling, container management, and observability—and they need it without becoming infrastructure experts.
 
-## Entrypoints
+This repo explores whether we can provide **standardised tooling** that lets AI engineers focus on models, not infrastructure. It investigates:
 
-- Blueprint template: `blueprints/nemo-tooling-blueprint.yaml`
-- Capability map notebook: `notebooks/01_exploratory_intro.ipynb`
+- **Fast onboarding**: Deploy a blueprint → get a working cluster with storage, scheduling, and observability
+- **Centralised governance**: Quotas, priorities, and topology-aware scheduling via Kueue/Task Governance
+- **LLMOps at scale**: Shared FSx filesystem for checkpoints, cached models, and artifact handoff between training stages
+- **Self-service for teams**: Engineers run training jobs without needing to understand EKS, FSx, or HyperPod internals
 
-## Project Structure
+## What's Being Explored
 
-- `blueprints/`: SMUS blueprint template and setup scripts.
-- `domain-vpc/`: CloudFormation for VPC endpoints used by the blueprint.
-- `*-container-pipeline/`: CodeBuild/ECR pipeline to build and publish the container images.
-- `sagemaker-hyperpod-cluster-setup/`: HyperPod/EKS CloudFormation templates and Lambda artifacts (submodule).
-- `sagemaker-hyperpod-recipes/`: Recipes and launcher used by the notebook workflows.
-- `sagemaker-hyperpod-training-adapter-for-nemo/`: 
-- `notebooks/`: Runnable exploration and training examples.
+The notebook (`notebooks/01_exploratory_intro.ipynb`) explores:
 
-## Prerequisites
+| Capability | What We Look at |
+|------------|-------------------|
+| Shared storage | FSx for Lustre visible from Studio Space and training pods |
+| Container discovery | Customised NeMo images registered in SSM, pulled by jobs |
+| Scheduling | Kueue queues, priorities, topology hints for multi-node placement |
+| Training (LLMFT) | SFT LoRA of llama, checkpointless training via HyperPod Recipes |
+| Training (NeMo 2.0) | Full fine-tune of qwen with HF→NeMo checkpoint conversion |
+| Inference | Model loading with adapters at each training stage |
 
-- An existing SageMaker Unified Studio (DataZone) domain (set `DOMAIN_ID` in `.env`).
-- AWS Organizations Identity Center configured (org-based Identity Center for the AWS Managed Grafana workspace that HyperPod Observability Kubernetes add-on provision).
+## Components
 
-## Local Setup
+| Component | Purpose |
+|-----------|---------|
+| `blueprints/` | SMUS blueprint that provisions HyperPod + FSx + Task Governance + Observability |
+| `nemo-container-pipeline/` | Builds NeMo container with EFA + AWS-OFI-NCCL for multi-node training |
+| `notebooks/` | Validation and training workflows |
+| `sagemaker-hyperpod-recipes/` | Training recipes and launcher (submodule) |
+| `sagemaker-hyperpod-cluster-setup/` | HyperPod/EKS CloudFormation templates (submodule) |
+| `sagemaker-hyperpod-training-adapter-for-nemo/` | NeMo adapter for HyperPod distributed training (submodule) |
 
-1. Initialize submodules:
+## Quick Start
+
+1. **Prerequisites**: SMUS domain, AWS Organizations Identity Center, AWS CLI v2, Python 3, Docker
+
+2. **Setup**:
    ```bash
    git submodule update --init --recursive
-   ```
-2. Create an env file and select it:
-   ```bash
    cp .env.template .env.<name>
    make env ENV=<name>
+   make setup-all
    ```
-3. Required tools:
-   - AWS CLI v2
-   - Python 3 + `boto3`
-   - Docker (for container work)
 
-## Common Commands
+3. **Deploy**: Create a project from the NeMo Tooling blueprint in SMUS
 
-- `make help`: list available targets.
-- `make artifacts`: build Lambda/container artifacts used by HyperPod templates.
-- `make sync`: stage HyperPod templates/resources and sync them to `s3://nemo-hyperpod-templates-<acct>-<region>` (creates bucket + CloudFormation access policy if missing).
-- `make blueprint`: upload the blueprint template to S3, create/update the NeMo Tooling SMUS blueprint, enable it, and create/update the project profile + grants.
-- `make hf-secret TOKEN=...`: create/update Secrets Manager `nemo-container-build/hf-access-token` in `AWS_REGION`.
-- `make provisioning-policy`: create/update `DataZoneProvisioningRolePolicy` and attach it to `AmazonSageMakerProvisioning-<acct>` (S3 templates bucket, IAM role mgmt, Lambda/StepFunctions/SSM, EventBridge + SQS for space sync, SM user profiles/spaces, EKS access entries).
-- `make nested-stack-policy`: create/update `NeMoNestedStackDeployerPolicy` (CloudFormation/EC2/VPC/EKS/SageMaker/FSx/Grafana/Prometheus/IAM/ECR/etc.) used by the nested stack deployer Lambda.
-- `make domain-role`: create/update the `DataZoneDomainConnectionCreator` role with a trust policy for DataZone env ConnectionCreator roles, attach its inline policy, and register it in the DataZone domain as a user profile + root owner.
-- `make container-build`: deploy the nemo container pipeline and trigger an image build.
-- `make setup-all`: run `provisioning-policy`, `nested-stack-policy`, `sync`, then `blueprint` for the current env.
+4. **Explore**: Open `notebooks/01_exploratory_intro.ipynb` in your deployed Space
 
+## Key Commands
 
-## Notebook Usage
+| Command | What It Does |
+|---------|--------------|
+| `make setup-all` | Full setup: policies, sync templates, create blueprint |
+| `make blueprint` | Update blueprint and project profile |
+| `make container-build` | Build and push custom NeMo container |
+| `make help` | List all targets |
 
-Clone the repo into your deployed Hyperpod SMUS Project and starts here: `notebooks/01_exploratory_intro.ipynb`.
+## Status
+
+This is **exploratory work**—not prescriptive tooling or a reference architecture. It's exploring the art of the possible for enabling distributed LLM workloads at scale.
+
+## Not Prescriptive
+
+The patterns here are an approach, not *the* approach. For example:
+
+**This repo explores**: Each SMUS project provisions its own HyperPod cluster via the blueprint.
+
+**An alternative model**: A pre-existing HyperPod cluster (provisioned via AWS Service Catalog or shared infrastructure) where the SMUS blueprint instead creates:
+- Cluster connection and onboarding notebooks
+- Team namespaces and RBAC
+- Scheduling policies and compute quotas (Kueue)
+- FSx for Lustre folders per project
+- Access to SMUS features: data pipelines, prep, analytics from enterprise data lakes, model registration, serving—all from one interface
+
+The goal is exploring *what's possible*, not defining *what should be done*.
