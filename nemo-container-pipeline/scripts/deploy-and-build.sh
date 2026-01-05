@@ -52,17 +52,16 @@ if [[ -z "$LLMFT_SCRIPTS_IMAGE" ]]; then
         --region "$AWS_REGION" \
         --profile "$AWS_PROFILE" 2>/dev/null || true)
     if [[ -z "$SSM_MATCHES" ]]; then
-        echo "ERROR: Could not find any /llmft-container-uri parameters in SSM."
-        echo "Set LLMFT_SCRIPTS_IMAGE explicitly (full image URI)."
-        exit 1
-    fi
-    LLMFT_COUNT=$(echo "$SSM_MATCHES" | wc -l | tr -d ' ')
-    if [[ "$LLMFT_COUNT" -ne 1 ]]; then
+        echo "No SSM parameter found, using default LLMFT base image..."
+        LLMFT_SCRIPTS_IMAGE="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/hyperpod-recipes-llmft-base:llmft-v1.0.0-llama"
+        echo "Default: $LLMFT_SCRIPTS_IMAGE"
+    elif [[ $(echo "$SSM_MATCHES" | wc -l | tr -d ' ') -ne 1 ]]; then
         echo "ERROR: Multiple /llmft-container-uri parameters found. Please set LLMFT_SCRIPTS_IMAGE explicitly."
         echo "$SSM_MATCHES"
         exit 1
+    else
+        LLMFT_SCRIPTS_IMAGE=$(echo "$SSM_MATCHES" | awk '{print $2}')
     fi
-    LLMFT_SCRIPTS_IMAGE=$(echo "$SSM_MATCHES" | awk '{print $2}')
 fi
 
 if [[ -z "$LLMFT_SCRIPTS_REPO_NAME" ]]; then

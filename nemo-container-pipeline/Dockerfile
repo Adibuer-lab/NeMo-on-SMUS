@@ -5,7 +5,6 @@ FROM ${LLMFT_SCRIPTS_IMAGE} as llmft_scripts
 FROM nvcr.io/nvidia/nemo:25.11
 
 # Build arguments for version control
-# NeMo 25.04 includes: PyTorch 2.7.0, CUDA 12.9, NeMo 2.3.0, Megatron Core 0.12.0
 ARG GDRCOPY_VERSION=v2.4.1
 # Match base image libfabric 1.22.0amzn5.0 (EFA installer 1.38.1)
 ARG EFA_INSTALLER_VERSION=1.38.1
