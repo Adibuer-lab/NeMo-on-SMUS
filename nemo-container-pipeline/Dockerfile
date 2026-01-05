@@ -1,20 +1,41 @@
-FROM nvcr.io/nvidia/nemo:25.04
+# syntax=__DOCKERFILE_FRONTEND__
+ARG LLMFT_SCRIPTS_IMAGE
+FROM ${LLMFT_SCRIPTS_IMAGE} as llmft_scripts
+
+FROM nvcr.io/nvidia/nemo:25.11
 
 # Build arguments for version control
 # NeMo 25.04 includes: PyTorch 2.7.0, CUDA 12.9, NeMo 2.3.0, Megatron Core 0.12.0
 ARG GDRCOPY_VERSION=v2.4.1
-ARG EFA_INSTALLER_VERSION=1.45.1
+# Match base image libfabric 1.22.0amzn5.0 (EFA installer 1.38.1)
+ARG EFA_INSTALLER_VERSION=1.38.1
 ARG AWS_OFI_NCCL_VERSION=v1.17.2
 ARG NCCL_VERSION=v2.27.7
 ARG NCCL_TESTS_VERSION=v2.13.10
-ARG TRANSFORMERS_VERSION=4.48.1
 ARG OPEN_MPI_PATH=/opt/amazon/openmpi
+ARG BUILD_JOBS=36
+ARG ADAPTER_CACHE_BUST=32
+
+ENV VIRTUAL_ENV=/opt/venv \
+    PATH=/opt/venv/bin:$PATH \
+    PIP_CACHE_DIR=/root/.cache/pip \
+    UV_CACHE_DIR=/root/.cache/uv \
+    UV_CONCURRENT_BUILDS=${BUILD_JOBS} \
+    UV_CONCURRENT_INSTALLS=${BUILD_JOBS} \
+    UV_CONCURRENT_DOWNLOADS=32
+
+# Import HyperPod runtime scripts from LLMFT image
+COPY --from=llmft_scripts /opt/bin /opt/bin
 
 ######################
 # Update and remove IB libverbs
 ######################
-RUN apt-get update -y && apt-get upgrade -y
-RUN apt-get remove -y --allow-change-held-packages \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update -y && apt-get upgrade -y
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get remove -y --allow-change-held-packages \
     ibverbs-utils \
     libibverbs-dev \
     libibverbs1 \
@@ -28,7 +49,9 @@ RUN rm -rf /opt/hpcx/ompi \
 ######################
 # Install build dependencies
 ######################
-RUN DEBIAN_FRONTEND=noninteractive apt install -y --allow-unauthenticated \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    DEBIAN_FRONTEND=noninteractive apt install -y --allow-unauthenticated \
     apt-utils \
     autoconf \
     automake \
@@ -69,7 +92,9 @@ ENV PATH=/opt/amazon/openmpi/bin/:/opt/amazon/efa/bin:/usr/bin:/usr/local/bin:$P
 ######################
 # Install libcheck
 ######################
-RUN apt-get update && \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
         check pkg-config
 
@@ -78,7 +103,7 @@ RUN apt-get update && \
 ######################
 RUN git clone -b ${GDRCOPY_VERSION} https://github.com/NVIDIA/gdrcopy.git /tmp/gdrcopy \
     && cd /tmp/gdrcopy \
-    && make prefix=/opt/gdrcopy install \
+    && make -j ${BUILD_JOBS} prefix=/opt/gdrcopy install \
     && rm -rf /tmp/gdrcopy
 
 ENV LD_LIBRARY_PATH=/opt/gdrcopy/lib:/usr/local/cuda/compat:$LD_LIBRARY_PATH
@@ -89,17 +114,55 @@ ENV PATH=/opt/gdrcopy/bin:$PATH
 ######################
 # Install EFA installer
 ######################
-RUN cd $HOME \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    set -e; \
+    . /etc/os-release; \
+    codename="${VERSION_CODENAME:-}"; \
+    if [ -z "$codename" ]; then \
+        codename="$(lsb_release -cs 2>/dev/null || true)"; \
+    fi; \
+    if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then \
+        sed -i -E "s/^Suites:.*/Suites: ${codename} ${codename}-updates ${codename}-security/" /etc/apt/sources.list.d/ubuntu.sources; \
+        sed -i -E "s/^Components:.*/Components: main restricted universe multiverse/" /etc/apt/sources.list.d/ubuntu.sources; \
+        rm -f /etc/apt/sources.list; \
+    elif [ -n "$codename" ]; then \
+        echo "deb http://archive.ubuntu.com/ubuntu ${codename} main restricted universe multiverse" > /etc/apt/sources.list; \
+        echo "deb http://archive.ubuntu.com/ubuntu ${codename}-updates main restricted universe multiverse" >> /etc/apt/sources.list; \
+        echo "deb http://archive.ubuntu.com/ubuntu ${codename}-security main restricted universe multiverse" >> /etc/apt/sources.list; \
+    fi; \
+    apt-get update -y; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        software-properties-common \
+        python3-venv \
+        udev \
+        dmidecode \
+        ethtool \
+        iproute2 \
+        pciutils \
+        tcl \
+        environment-modules; \
+    if [ "$codename" = "noble" ]; then \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            libevent-core-2.1-7t64 \
+            libevent-pthreads-2.1-7t64; \
+    fi; \
+    apt-get autoremove -y
+
+RUN apt-get update -y \
+    && cd $HOME \
     && curl -O https://efa-installer.amazonaws.com/aws-efa-installer-${EFA_INSTALLER_VERSION}.tar.gz \
     && tar -xf $HOME/aws-efa-installer-${EFA_INSTALLER_VERSION}.tar.gz \
     && cd aws-efa-installer \
-    && ./efa_installer.sh -y -g -d --skip-kmod --skip-limit-conf --no-verify \
+    && ./efa_installer.sh -y -g --skip-kmod --skip-limit-conf --no-verify \
     && rm -rf $HOME/aws-efa-installer
 
 ######################
 # Install AWS-OFI-NCCL plugin
 ######################
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y libhwloc-dev
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y libhwloc-dev
 
 SHELL ["/bin/bash", "-c"]
 RUN curl -OL https://github.com/aws/aws-ofi-nccl/releases/download/${AWS_OFI_NCCL_VERSION}/aws-ofi-nccl-${AWS_OFI_NCCL_VERSION//v}.tar.gz \
@@ -110,7 +173,7 @@ RUN curl -OL https://github.com/aws/aws-ofi-nccl/releases/download/${AWS_OFI_NCC
         --with-libfabric=/opt/amazon/efa \
         --with-cuda=/usr/local/cuda \
         --enable-platform-aws \
-    && make -j $(nproc) \
+    && make -j ${BUILD_JOBS} \
     && make install \
     && cd .. \
     && rm -rf aws-ofi-nccl-${AWS_OFI_NCCL_VERSION//v} \
@@ -129,26 +192,42 @@ RUN echo "hwloc_base_binding_policy = none" >> /opt/amazon/openmpi/etc/openmpi-m
 ######################
 # Install Python dependencies
 ######################
-RUN pip3 install --no-cache-dir \
-    awscli==1.44.7 \
-    boto3==1.42.17 \
-    sagemaker==3.3.0 \
-    pynvml \
-    wandb \
-    transformers==${TRANSFORMERS_VERSION} \
-    sentencepiece \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python3 -m venv --system-site-packages /opt/venv \
+    && /opt/venv/bin/python -m pip install --upgrade pip \
+    && /opt/venv/bin/python -m pip install --upgrade --force-reinstall uv
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cache/pip \
+    /opt/venv/bin/python -m uv pip install \
+    # Only install packages not already present in base image to avoid version skew
+    sagemaker \
     python-etcd \
-    nemo-run==0.4.0 \
-    nemoguardrails \
     hyperpod-elastic-agent==1.1.0 \
-    skypilot-nightly[kubernetes]
+    nv-one-logger-core \
+    nv-one-logger-training-telemetry \
+    nv-one-logger-pytorch-lightning-integration\
+    nv-one-logger-otel 
+
+# Ensure venv doesn't shadow base image Torch/Triton (use system Torch + TE)
+RUN /opt/venv/bin/pip uninstall -y torch torchvision torchaudio triton || true
+
+# Remove CUDA 12 runtime wheels pulled in by numba-cuda to avoid mixed CUDA runtimes
+# (uninstall from both venv and system site-packages since venv uses --system-site-packages)
+RUN /opt/venv/bin/pip uninstall -y numba-cuda nvidia-cuda-runtime-cu12 nvidia-cuda-nvrtc-cu12 nvidia-cuda-cupti-cu12 || true \
+    && /usr/bin/python3 -m pip uninstall -y numba-cuda nvidia-cuda-runtime-cu12 nvidia-cuda-nvrtc-cu12 nvidia-cuda-cupti-cu12 || true
 
 ######################
 # Install SageMaker HyperPod training adapter for NeMo from source
 ######################
-RUN git clone https://github.com/Adibuer-lab/sagemaker-hyperpod-training-adapter-for-nemo.git /opt/hyperpod-adapter \
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cache/pip \
+    echo "Cache bust value: ${ADAPTER_CACHE_BUST}" \
+    && git clone https://github.com/Adibuer-lab/sagemaker-hyperpod-training-adapter-for-nemo.git /opt/hyperpod-adapter \
     && cd /opt/hyperpod-adapter \
-    && pip3 install --no-cache-dir ".[all]"
+    && /opt/venv/bin/python -m uv pip install --no-deps ".[all]"
+
+
 
 ######################
 # Configure MPI wrapper

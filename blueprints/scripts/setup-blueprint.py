@@ -95,7 +95,7 @@ def get_nemo_tooling_user_parameters():
     params = [
         {'fieldType': 'STRING', 'keyName': 'HyperPodClusterName', 'description': 'Base name for the HyperPod cluster', 'isOptional': True, 'defaultValue': 'nemo-hyperpod'},
         {'fieldType': 'STRING', 'keyName': 'NeMoContainerRepository', 'description': 'ECR repository for NeMo container', 'isOptional': True, 'defaultValue': 'nemo-framework-hyperpod'},
-        {'fieldType': 'STRING', 'keyName': 'NeMoContainerTag', 'description': 'NeMo container image tag', 'isOptional': True, 'defaultValue': '25.04-eks'},
+        {'fieldType': 'STRING', 'keyName': 'NeMoContainerTag', 'description': 'NeMo container image tag', 'isOptional': True, 'defaultValue': '25.11-eks'},
         {'fieldType': 'STRING', 'keyName': 'InstanceType1', 'description': 'Instance type for training nodes (Karpenter manages scaling)', 'isOptional': True, 'defaultValue': 'ml.p4d.24xlarge'},
         {'fieldType': 'STRING', 'keyName': 'KubernetesVersion', 'description': 'Kubernetes version for EKS cluster', 'isOptional': True, 'defaultValue': '1.33'},
         {'fieldType': 'STRING', 'keyName': 'EnableTaskGovernance', 'description': 'Enable HyperPod task governance (true/false)', 'isOptional': True, 'defaultValue': 'true'},
