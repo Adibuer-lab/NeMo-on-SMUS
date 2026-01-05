@@ -8,7 +8,7 @@ This repo explores whether we can provide **standardised tooling** that lets AI 
 
 - **Fast onboarding**: Deploy a blueprint → get a working cluster with storage, scheduling, and observability
 - **Centralised governance**: Quotas, priorities, and topology-aware scheduling via Kueue/Task Governance
-- **LLMOps at scale**: Shared FSx filesystem for checkpoints, cached models, and artifact handoff between training stages
+- **LLMOps at scale**: Shared FSx filesystem for eliminating I/O bottlenecks, checkpoints, cached models, and artifact handoff between training stages
 - **Self-service for teams**: Engineers run training jobs without needing to understand EKS, FSx, or HyperPod internals
 
 ## What's Being Explored
@@ -20,7 +20,7 @@ The notebook (`notebooks/01_exploratory_intro.ipynb`) explores:
 | Shared storage | FSx for Lustre visible from Studio Space and training pods |
 | Container discovery | Customised NeMo images registered in SSM, pulled by jobs |
 | Scheduling | Kueue queues, priorities, topology hints for multi-node placement |
-| Training (LLMFT) | SFT LoRA of llama, checkpointless training via HyperPod Recipes |
+| Training (LLMFT) | SFT LoRA of llama, training via HyperPod Recipes |
 | Training (NeMo 2.0) | Full fine-tune of qwen with HF→NeMo checkpoint conversion |
 | Inference | Model loading with adapters at each training stage |
 
