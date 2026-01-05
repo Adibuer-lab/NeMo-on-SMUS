@@ -3,7 +3,7 @@
 This repo explores infrastructure and tooling to learn about NVIDIA NeMo on SageMaker Unified Studio (DataZone) using SageMaker HyperPod on EKS. It explores it from the perspective of providing standardised tooling for AI engineers, centralised governance and speedy enablement of LLMOps at scale. It includes:
 
 - An SMUS blueprint that provisions a HyperPod cluster, FSx for Lustre, task governance/Kueue, and optional SageMaker Spaces integration.
-- Infrastructure pipelines for approved NeMo/LLMFT container images.
+- Infrastructure pipelines for customising NeMo/LLMFT container images.
 - Notebooks that validate shared storage, container discovery, add-ons, and run recipes-based training/inference workflows.
 
 ## Entrypoints
