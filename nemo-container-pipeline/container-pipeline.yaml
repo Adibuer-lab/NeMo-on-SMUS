@@ -9,8 +9,24 @@ Parameters:
   
   ImageTag:
     Type: String
-    Default: 25.04-eks
+    Default: 25.11-eks
     Description: Docker image tag
+  BuildkitRepositoryName:
+    Type: String
+    Default: buildkit
+    Description: ECR repository name for the BuildKit image used by buildx
+  DockerfileFrontendRepositoryName:
+    Type: String
+    Default: dockerfile-frontend
+    Description: ECR repository name for the Dockerfile frontend image (1-labs)
+  LLMFTScriptsRepositoryName:
+    Type: String
+    Default: hyperpod-recipes-llmft-custom
+    Description: ECR repository name that provides /opt/bin scripts (LLMFT image)
+  LLMFTScriptsImage:
+    Type: String
+    Default: ""
+    Description: Full image URI for LLMFT scripts source (e.g., <account>.dkr.ecr.<region>.amazonaws.com/hyperpod-recipes-llmft-custom:tag)
 
 Resources:
   # S3 Bucket for build source files
@@ -181,6 +197,16 @@ Resources:
                 Resource: !GetAtt ECRRepository.Arn
               - Effect: Allow
                 Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                Resource:
+                  - !GetAtt ECRRepository.Arn
+                  - !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${BuildkitRepositoryName}
+                  - !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${DockerfileFrontendRepositoryName}
+                  - !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${LLMFTScriptsRepositoryName}
+              - Effect: Allow
+                Action:
                   - secretsmanager:GetSecretValue
                 Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:nemo-container-build/ngc-api-key-*
               - Effect: Allow
@@ -200,6 +226,8 @@ Resources:
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Artifacts:
         Type: NO_ARTIFACTS
+      Cache:
+        Type: NO_CACHE
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_2XLARGE
@@ -212,6 +240,10 @@ Resources:
             Value: !Ref RepositoryName
           - Name: IMAGE_TAG
             Value: !Ref ImageTag
+          - Name: DOCKER_BUILDKIT
+            Value: "1"
+          - Name: LLMFT_SCRIPTS_IMAGE
+            Value: !Ref LLMFTScriptsImage
       Source:
         Type: S3
         Location: !Sub ${SourceBucket}/${RepositoryName}/source.zip
@@ -228,18 +260,28 @@ Resources:
                 - echo $NGC_PASSWORD | docker login nvcr.io -u $NGC_USERNAME --password-stdin
                 - echo "Logging in to ECR..."
                 - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+                - echo "Setting up buildx..."
+                - docker buildx version
+                - docker buildx create --name codebuild-builder --use || docker buildx use codebuild-builder
+                - export CACHE_REF=$ECR_REGISTRY/$ECR_REPOSITORY:buildcache
             build:
               commands:
                 - echo "Building NeMo container..."
-                - docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-                - docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+                - >
+                  docker buildx build
+                  --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+                  --tag $ECR_REGISTRY/$ECR_REPOSITORY:latest
+                  --build-arg LLMFT_SCRIPTS_IMAGE=$LLMFT_SCRIPTS_IMAGE
+                  --cache-from type=registry,ref=$CACHE_REF
+                  --cache-to type=registry,ref=$CACHE_REF,mode=max
+                  --push
+                  .
             post_build:
               commands:
                 - echo "Pushing to ECR..."
-                - docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-                - docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+                - echo "Image pushed via buildx"
                 - echo "Build complete - $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
-      TimeoutInMinutes: 90
+      TimeoutInMinutes: 360
       Tags:
         - Key: Project
           Value: nemo-unified-studio

@@ -80,11 +80,11 @@ fi
 
 # Log in to source ECR and mirror the base image
 echo "[0/4] Mirroring base image to our ECR..."
-if aws ecr get-login-password --region us-east-1 --profile "$AWS_PROFILE" --registry-ids 327873000638 >/dev/null 2>&1; then
-    aws ecr get-login-password --region us-east-1 --profile "$AWS_PROFILE" --registry-ids 327873000638 | docker login --username AWS --password-stdin 327873000638.dkr.ecr.us-east-1.amazonaws.com
-else
-    # Fallback for older CLI
-    eval "$(aws ecr get-login --no-include-email --region us-east-1 --profile "$AWS_PROFILE" --registry-ids 327873000638)"
+if ! aws ecr get-login-password --region us-east-1 --profile "$AWS_PROFILE" \
+    | docker login --username AWS --password-stdin 327873000638.dkr.ecr.us-east-1.amazonaws.com; then
+    echo "ERROR: Failed to authenticate to source ECR registry."
+    echo "       Ensure AWS CLI v2+ is installed and your IAM principal can access 327873000638."
+    exit 1
 fi
 
 aws ecr get-login-password --region "$AWS_REGION" --profile "$AWS_PROFILE" | docker login --username AWS --password-stdin "${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"

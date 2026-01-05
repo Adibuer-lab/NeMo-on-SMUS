@@ -15,12 +15,12 @@ ARG FLASH_ATTN_BUILD_JOBS=16
 ARG FLASH_ATTN_CUDA_ARCH_LIST=80;90
 ARG FLASH_ATTN_TORCH=2.4
 ARG FLASH_ATTN_CUDA=cu12
-ARG BUILD_JOBS=32
-ARG SMP_PYTORCH_VERSION=2.4.1
-ARG SMP_PYTORCH_BUILD=sm_py3.11_cuda12.1_cudnn9.4.0_nccl_pt_2.4_tsm_2.7_smp_2.7.0_cuda12.1_0
+ARG BUILD_JOBS=36
+ARG SMP_PYTORCH_VERSION=2.5.1
+ARG SMP_PYTORCH_BUILD=sm_py3.11_cuda12.4_cudnn9.4.0_nccl_pt_2.5_tsm_2.8_smp_2.8.0_cuda12.4_0
 ARG SMDDP_WHL_URL=https://smdataparallel.s3.amazonaws.com/binary/pytorch/2.4.1/cu121/2024-10-09/smdistributed_dataparallel-2.5.0-cp311-cp311-linux_x86_64.whl
 ARG OPEN_MPI_PATH=/opt/amazon/openmpi
-ARG ADAPTER_CACHE_BUST=0
+ARG ADAPTER_CACHE_BUST=15
 
 ENV UV_PYTHON=/opt/conda/bin/python3.11 \
     UV_CONCURRENT_BUILDS=${BUILD_JOBS} \
@@ -173,7 +173,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         boto3==1.42.17 \
         sagemaker==3.3.0 \
         pynvml \
-        wandb \
+        psutil \
+        wandb==0.20.1 \
         onnx==1.16.2 \
         jinja2>=3.1 \
         attrs \
@@ -181,17 +182,23 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         importlib-metadata \
         ninja \
         packaging \
-        pydantic \
+        pydantic==2.12.5 \
+        protobuf==4.24.4 \
         transformers==${TRANSFORMERS_VERSION} \
         sentencepiece \
         python-etcd \
-        nemo-run==0.4.0 \
-        nemo-toolkit \
+        "nemo_run @ git+https://github.com/NVIDIA-NeMo/Run.git@7fc5426b16fbfb6020238986366faee6fe9b6138" \
+        nv-one-logger-core==2.3.1 \
+        nv-one-logger-training-telemetry==2.3.1 \
+        nv-one-logger-pytorch-lightning-integration==2.3.1 \
+        nv-one-logger-otel==2.3.1 \
         nemoguardrails \
         hyperpod-elastic-agent==1.1.0 \
         skypilot-nightly[kubernetes] \
-        pytorch-lightning \
-        s3torchconnector 
+        lightning==2.3.3 \
+        pytorch-lightning==2.3.3 \
+        torchmetrics==1.8.2 \
+        s3torchconnector
 
 ######################
 # Install SageMaker HyperPod training adapter for NeMo from source (before SMP torch swap)
@@ -230,19 +237,9 @@ RUN --mount=type=cache,target=/opt/conda/pkgs \
     && /opt/conda/bin/conda remove -y conda-build \
     && rm -rf /tmp/aws-ofi-nccl
 
-RUN --mount=type=cache,target=/opt/conda/pkgs \
-    /opt/conda/bin/mamba install -y "cudnn>=9,<10" -c conda-forge
-
-RUN test -f /opt/conda/include/cudnn.h \
-    && mkdir -p /usr/local/cuda/include /usr/local/cuda/lib64 \
-    && ln -sf /opt/conda/include/cudnn*.h /usr/local/cuda/include/ \
-    && ln -sf /opt/conda/lib/libcudnn* /usr/local/cuda/lib64/
-
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=cache,target=/root/.cache/pip \
-    /opt/conda/bin/python -m pip install uv \
-    && /opt/conda/bin/uv pip install --system \
-        megatron-core==0.11.0
+## Note: cuDNN is pulled in by the SMP PyTorch conda package with a pinned,
+## CUDA-matched version (per SMP build string). Avoid installing a newer
+## conda-forge cuDNN here to prevent ABI mismatches with CUDA libs.
 
 # Reinstall Jinja2 after conda-build removal to ensure the package files exist
 RUN /opt/conda/bin/python -m pip install --force-reinstall "markupsafe>=2.0" "jinja2>=3.1" \
@@ -285,7 +282,69 @@ RUN --mount=type=cache,target=/opt/conda/pkgs \
         -c https://sagemaker-distributed-model-parallel.s3.us-west-2.amazonaws.com/smp-v2/ \
         -c pytorch -c nvidia -c conda-forge
 
+# Remove conda-provided cuDNN/CUDA meta packages that can drift to 13.x.
+RUN --mount=type=cache,target=/opt/conda/pkgs \
+    /opt/conda/bin/mamba remove -y cudnn libcudnn libcudnn-dev cuda-opencl cuda-version || true \
+    && /opt/conda/bin/mamba install -y "cuda-version=12.4.*" -c nvidia -c conda-forge
+
+# Install cuDNN from NVIDIA's Debian repo (runtime + dev headers).
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    set -e; \
+    . /etc/os-release; \
+    distro="ubuntu$(printf %s "$VERSION_ID" | tr -d '.')"; \
+    arch="x86_64"; \
+    curl -fsSL "https://developer.download.nvidia.com/compute/cuda/repos/${distro}/${arch}/cuda-keyring_1.1-1_all.deb" -o /tmp/cuda-keyring.deb; \
+    dpkg -i /tmp/cuda-keyring.deb; \
+    rm -f /tmp/cuda-keyring.deb; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        libcudnn9-cuda-12 \
+        libcudnn9-dev-cuda-12; \
+    apt-get autoremove -y; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
+# Prefer the conda CUDA runtime libs; cuDNN comes from system packages.
+ENV LD_LIBRARY_PATH=/opt/conda/lib:/usr/lib/x86_64-linux-gnu:/usr/local/cuda/targets/x86_64-linux/lib:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+
+# Sanity-check CUDA version and cuDNN presence (bash).
+RUN set -e; \
+    cuda_meta=$(ls /opt/conda/conda-meta/cuda-version-*.json 2>/dev/null | head -n1); \
+    [ -n "$cuda_meta" ] || { echo "cuda-version package not found in /opt/conda/conda-meta" >&2; exit 1; }; \
+    cuda_ver=$(basename "$cuda_meta" | sed 's/^cuda-version-//; s/-.*//'); \
+    [ -n "$cuda_ver" ] || { echo "Failed to parse cuda-version from $cuda_meta" >&2; exit 1; }; \
+    case "$cuda_ver" in 12.4*) ;; *) echo "Unexpected cuda-version=$cuda_ver (expected 12.4.x)" >&2; exit 1;; esac; \
+    if [ ! -f /usr/lib/x86_64-linux-gnu/libcudnn.so.9 ]; then \
+        echo "Missing /usr/lib/x86_64-linux-gnu/libcudnn.so.9; available libcudnn files:" >&2; \
+        ls -l /usr/lib/x86_64-linux-gnu/libcudnn.so* >&2 || true; \
+        exit 1; \
+    fi; \
+    if [ ! -f /usr/lib/x86_64-linux-gnu/libcudnn_graph.so.9 ]; then \
+        echo "Missing /usr/lib/x86_64-linux-gnu/libcudnn_graph.so.9; available libcudnn_graph files:" >&2; \
+        ls -l /usr/lib/x86_64-linux-gnu/libcudnn_graph.so* >&2 || true; \
+        exit 1; \
+    fi
+
 RUN /opt/conda/bin/python -c "import importlib.util, torch; assert importlib.util.find_spec('torch.sagemaker'), 'torch.sagemaker missing after SMP install'"
+
+# Verify cuDNN resolves libcublasLt from the expected CUDA 12.4 stack.
+RUN ldd -r /usr/lib/x86_64-linux-gnu/libcudnn_adv.so.9 2>/dev/null | grep -E 'cublasLt|not found' || true; \
+    ldd -r /usr/lib/x86_64-linux-gnu/libcudnn_engines_precompiled.so.9 2>/dev/null | grep -E 'cublasLt|not found' || true
+
+# Align NeMo 2.3 stack dependencies after SMP torch is installed
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=cache,target=/root/.cache/pip \
+    /opt/conda/bin/uv pip install --system --no-deps \
+        megatron-core==0.12.3 \
+        torchvision==0.20.1 \
+        nemo-toolkit==2.3.0 \
+        nvidia-modelopt==0.23.2 \
+        nvidia-modelopt-core==0.23.2 \
+    && /opt/conda/bin/uv pip install --system --no-deps --no-build-isolation mamba-ssm==2.2.6.post3
+
+# Shim megatron-core async_utils for hyperpod_nemo_adapter (export DistributedAsyncCaller)
+RUN /opt/conda/bin/python -c "from pathlib import Path; p=Path('/opt/conda/lib/python3.11/site-packages/megatron/core/dist_checkpointing/strategies/async_utils.py'); t=p.read_text(); marker='Shim: export DistributedAsyncCaller'; need=('DistributedAsyncCaller =' not in t and 'class DistributedAsyncCaller' not in t); shim='\\n\\n# Shim: export DistributedAsyncCaller\\ntry:\\n    DistributedAsyncCaller\\nexcept NameError:\\n    try:\\n        DistributedAsyncCaller = TemporalAsyncCaller\\n    except NameError:\\n        DistributedAsyncCaller = AsyncCaller\\n'; p.write_text(t+shim) if need else None"
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cache/pip \
@@ -304,10 +363,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cache/pip \
     CUDA_HOME=/usr/local/cuda \
-    CUDNN_PATH=/opt/conda \
-    CUDNN_LIBRARY=/opt/conda/lib \
-    CUDNN_INCLUDE_DIR=/opt/conda/include \
-    LD_LIBRARY_PATH=/usr/local/cuda/lib64:/opt/conda/lib:$LD_LIBRARY_PATH \
+    CUDNN_PATH=/usr \
+    CUDNN_LIBRARY=/usr/lib/x86_64-linux-gnu \
+    CUDNN_INCLUDE_DIR=/usr/include \
+    LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH \
     NVTE_FRAMEWORK=pytorch \
     MAX_JOBS=${BUILD_JOBS} \
     CMAKE_BUILD_PARALLEL_LEVEL=${BUILD_JOBS} \
@@ -316,7 +375,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --extra-index-url ${TRANSFORMER_ENGINE_INDEX_URL} \
         "transformer_engine==${TRANSFORMER_ENGINE_VERSION}" \
         "transformer_engine_cu12==${TRANSFORMER_ENGINE_VERSION}" \
-        "transformer_engine_torch==${TRANSFORMER_ENGINE_VERSION}"
+        "transformer_engine_torch==${TRANSFORMER_ENGINE_VERSION}" \
+        "transformer_engine[jax]==${TRANSFORMER_ENGINE_VERSION}" \
+        "transformer_engine[paddle]==${TRANSFORMER_ENGINE_VERSION}"
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=cache,target=/root/.cache/pip \
@@ -328,7 +389,10 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     /opt/conda/bin/python -m pip install uv \
     && /opt/conda/bin/uv pip install --system \
         attrs \
-        aiobotocore
+        aiobotocore 
+# Ensure psutil is fully installed (binary wheel with native extension)
+RUN /opt/conda/bin/python -m pip install --force-reinstall --no-cache-dir --only-binary=:all: psutil==7.2.1 \
+    && /opt/conda/bin/python -c "import psutil; assert getattr(psutil,'__file__',None), 'psutil missing __file__ (namespace package)'; assert hasattr(psutil,'virtual_memory'), 'psutil missing virtual_memory'; print('psutil OK:', psutil.__version__)"
 
 # Patch torch.sagemaker TE version parsing (late layer to avoid full rebuild)
 RUN /opt/conda/bin/python -c "from pathlib import Path; p=Path('/opt/conda/lib/python3.11/site-packages/torch/sagemaker/patches/patch_manager.py'); t=p.read_text(); \
@@ -338,6 +402,11 @@ old2='def get_loose_version(cur_TE_version_commit_id: str) -> str:\\n    version
 new2='def get_loose_version(cur_TE_version_commit_id: str) -> str:\\n    if \"+\" in cur_TE_version_commit_id:\\n        version, _ = cur_TE_version_commit_id.split(\"+\", maxsplit=1)\\n        return version\\n    return cur_TE_version_commit_id\\n'; \
 cond=('return cur_TE_version_commit_id' in t); \
 p.write_text(t.replace(old1, new1).replace(old2, new2)) if (old1 in t or old2 in t) else print('patch_manager.py already patched.') if cond else print('patch_manager.py format changed; no update applied.')"
+
+# Shim torch.sagemaker async_utils DistributedAsyncCaller for megatron-core>=0.12 API
+RUN /opt/conda/bin/python -c "from pathlib import Path; p=Path('/opt/conda/lib/python3.11/site-packages/torch/sagemaker/distributed/checkpoint/async_utils.py'); t=p.read_text(); marker='Shim: sm async_utils compat'; \
+lines=['', '# Shim: sm async_utils compat', 'try:', '    from megatron.core.dist_checkpointing.strategies.async_utils import TemporalAsyncCaller as _TAC, AsyncRequest as _AR', '    def _init(self): _TAC.__init__(self)', '    def _schedule_async_call(self, async_req_or_fn, async_fn_args=None, async_fn_kwargs=None):', '        if isinstance(async_req_or_fn, _AR):', '            return _TAC.schedule_async_call(self, async_req_or_fn)', '        if async_fn_kwargs is None:', '            async_fn_kwargs = {}', '        return _TAC.schedule_async_call(self, _AR(async_req_or_fn, async_fn_args, [], async_fn_kwargs))', '    def _is_current_async_call_done(self, blocking=True, no_dist=False):', '        return _TAC.is_current_async_call_done(self, blocking, no_dist)', '    def _close(self):', '        return _TAC.close(self)', '    def _del(self):', '        return None', '    DistributedAsyncCaller.__init__ = _init', '    DistributedAsyncCaller.schedule_async_call = _schedule_async_call', '    DistributedAsyncCaller.is_current_async_call_done = _is_current_async_call_done', '    DistributedAsyncCaller.close = _close', '    DistributedAsyncCaller.__del__ = _del', '    DistributedAsyncCaller.__abstractmethods__ = frozenset()', 'except Exception:', '    pass']; \
+shim='\\n'.join(lines); p.write_text(t+shim) if marker not in t else None"
 
 ######################
 # Configure MPI wrapper
@@ -356,5 +425,11 @@ ENV OMPI_MCA_pml=^cm,ucx \
     OPAL_PREFIX=/opt/amazon/openmpi \
     NCCL_SOCKET_IFNAME=^docker,lo,veth \
     PMIX_MCA_gds=hash
+
+# Temporary hotfix: ensure torchx/importlib_metadata dependency chain is satisfied.
+RUN /opt/conda/bin/pip install --no-cache-dir zipp uvicorn pytz tiktoken
+
+# Patch nemo_run API to expose factory/task and support for_task (late layer to minimize rebuilds)
+RUN /opt/conda/bin/python -c 'from pathlib import Path; p=Path("/opt/conda/lib/python3.11/site-packages/nemo_run/__init__.py"); t=p.read_text(); shim="""# Compatibility shims for NeMo LLM expecting nemo_run.factory/task\n\ndef factory(fn=None, **kwargs):\n    if \"for_task\" in kwargs and \"namespace\" not in kwargs:\n        kwargs[\"namespace\"] = kwargs.pop(\"for_task\")\n    else:\n        kwargs.pop(\"for_task\", None)\n    def wrap(f):\n        if not hasattr(f, \"__auto_config__\"):\n            setattr(f, \"__auto_config__\", True)\n        return cli.factory(f, **kwargs)\n    return wrap if fn is None else wrap(fn)\n\ndef task(*args, **kwargs):\n    return cli.entrypoint(*args, **kwargs)\n\ntry:\n    __all__.extend([\"factory\", \"task\"])\nexcept Exception:\n    pass\n"""; p.write_text(t + "\n\n" + shim) if "Compatibility shims for NeMo LLM" not in t else None'
 
 WORKDIR /workspace

@@ -24,5 +24,6 @@ TOSOS.md
 mirror-recipe-image.sh
 mirror-buildkit-to-ecr.sh
 mirror-dockerfile-frontend-to-ecr.sh
+tmp
 
 .ipynb_checkpoints

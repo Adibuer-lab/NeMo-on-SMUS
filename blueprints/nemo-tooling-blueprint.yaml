@@ -67,7 +67,7 @@ Parameters:
     Description: ECR repository name for NeMo container
   NeMoContainerTag:
     Type: String
-    Default: 25.04-eks
+    Default: 25.11-eks
     Description: NeMo container image tag
   LLMFTContainerRepository:
     Type: String

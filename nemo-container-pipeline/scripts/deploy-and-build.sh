@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PIPELINE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 AWS_REGION="${AWS_REGION:-us-east-1}"
+AWS_PROFILE="${AWS_PROFILE:-default}"
 STACK_NAME="nemo-container-pipeline"
 TEMPLATE_FILE="$PIPELINE_DIR/container-pipeline.yaml"
 DOCKERFILE_PATH="$PIPELINE_DIR/Dockerfile"
@@ -26,14 +27,88 @@ exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "=== NeMo Container Pipeline ==="
 echo "Started: $(date '+%Y-%m-%d %H:%M:%S')"
-echo "Profile: ${AWS_PROFILE:-default} | Region: $AWS_REGION"
+echo "Profile: ${AWS_PROFILE} | Region: $AWS_REGION"
 echo ""
+
+# Resolve caller account (used for target ECR URIs)
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text --region "$AWS_REGION" --profile "$AWS_PROFILE")
+if [[ -z "$ACCOUNT_ID" ]]; then
+    echo "ERROR: Unable to resolve AWS account ID"
+    exit 1
+fi
+
+# Resolve LLMFT scripts image (source for /opt/bin scripts)
+LLMFT_SCRIPTS_IMAGE="${LLMFT_SCRIPTS_IMAGE:-}"
+LLMFT_SCRIPTS_REPO_NAME="${LLMFT_SCRIPTS_REPO_NAME:-}"
+
+if [[ -z "$LLMFT_SCRIPTS_IMAGE" ]]; then
+    echo "Resolving LLMFT scripts image from SSM..."
+    SSM_MATCHES=$(aws ssm get-parameters-by-path \
+        --path /sagemaker/hyperpod/ \
+        --recursive \
+        --with-decryption \
+        --query "Parameters[?ends_with(Name, '/llmft-container-uri')].[Name,Value]" \
+        --output text \
+        --region "$AWS_REGION" \
+        --profile "$AWS_PROFILE" 2>/dev/null || true)
+    if [[ -z "$SSM_MATCHES" ]]; then
+        echo "ERROR: Could not find any /llmft-container-uri parameters in SSM."
+        echo "Set LLMFT_SCRIPTS_IMAGE explicitly (full image URI)."
+        exit 1
+    fi
+    LLMFT_COUNT=$(echo "$SSM_MATCHES" | wc -l | tr -d ' ')
+    if [[ "$LLMFT_COUNT" -ne 1 ]]; then
+        echo "ERROR: Multiple /llmft-container-uri parameters found. Please set LLMFT_SCRIPTS_IMAGE explicitly."
+        echo "$SSM_MATCHES"
+        exit 1
+    fi
+    LLMFT_SCRIPTS_IMAGE=$(echo "$SSM_MATCHES" | awk '{print $2}')
+fi
+
+if [[ -z "$LLMFT_SCRIPTS_REPO_NAME" ]]; then
+    if [[ "$LLMFT_SCRIPTS_IMAGE" == *".amazonaws.com/"* ]]; then
+        repo_part="${LLMFT_SCRIPTS_IMAGE#*.amazonaws.com/}"
+        LLMFT_SCRIPTS_REPO_NAME="${repo_part%%:*}"
+    fi
+fi
+
+if [[ -z "$LLMFT_SCRIPTS_REPO_NAME" ]]; then
+    echo "ERROR: Unable to infer LLMFT scripts repository name from image."
+    echo "Set LLMFT_SCRIPTS_REPO_NAME explicitly."
+    exit 1
+fi
+
+echo "LLMFT scripts image: $LLMFT_SCRIPTS_IMAGE"
+echo "LLMFT scripts repo:  $LLMFT_SCRIPTS_REPO_NAME"
+echo ""
+
+# Dockerfile frontend settings (for BuildKit frontend resolution)
+DOCKERFILE_FRONTEND_REPO_NAME="${DOCKERFILE_FRONTEND_REPO_NAME:-dockerfile-frontend}"
+DOCKERFILE_FRONTEND_TAG="${DOCKERFILE_FRONTEND_TAG:-1-labs}"
+DOCKERFILE_FRONTEND_IMAGE="${DOCKERFILE_FRONTEND_IMAGE:-${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${DOCKERFILE_FRONTEND_REPO_NAME}:${DOCKERFILE_FRONTEND_TAG}}"
+
+echo "Dockerfile frontend: $DOCKERFILE_FRONTEND_IMAGE"
+echo ""
+
+# Ensure dockerfile frontend repo exists when using local ECR
+LOCAL_ECR_PREFIX="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/"
+if [[ "$DOCKERFILE_FRONTEND_IMAGE" == "${LOCAL_ECR_PREFIX}"* ]]; then
+    FRONTEND_REPO="${DOCKERFILE_FRONTEND_IMAGE#${LOCAL_ECR_PREFIX}}"
+    FRONTEND_REPO="${FRONTEND_REPO%%:*}"
+    if ! aws ecr describe-repositories --repository-names "$FRONTEND_REPO" --region "$AWS_REGION" --profile "$AWS_PROFILE" >/dev/null 2>&1; then
+        echo "Creating dockerfile frontend ECR repository: $FRONTEND_REPO"
+        aws ecr create-repository --repository-name "$FRONTEND_REPO" --region "$AWS_REGION" --profile "$AWS_PROFILE" >/dev/null
+    fi
+fi
 
 # Step 1: Inject Dockerfile into template
 echo "[1/4] Preparing template..."
 TEMP_TEMPLATE=$(mktemp).yaml
 TEMP_DOCKERFILE=$(mktemp)
-sed 's/^/        /' "$DOCKERFILE_PATH" > "$TEMP_DOCKERFILE"
+TEMP_DOCKERFILE_BUILD=$(mktemp)
+sed -e "s|__DOCKERFILE_FRONTEND__|$DOCKERFILE_FRONTEND_IMAGE|g" \
+    "$DOCKERFILE_PATH" > "$TEMP_DOCKERFILE_BUILD"
+sed 's/^/        /' "$TEMP_DOCKERFILE_BUILD" > "$TEMP_DOCKERFILE"
 sed -e "/__DOCKERFILE_CONTENT__/{
     r $TEMP_DOCKERFILE
     d
@@ -45,7 +120,8 @@ echo "  Injected Dockerfile into template"
 echo "[2/4] Validating CloudFormation template..."
 aws cloudformation validate-template \
     --template-body "file://$TEMP_TEMPLATE" \
-    --region "$AWS_REGION" || { rm -f "$TEMP_TEMPLATE"; exit 1; }
+    --region "$AWS_REGION" \
+    --profile "$AWS_PROFILE" || { rm -f "$TEMP_TEMPLATE"; exit 1; }
 echo "  Template valid"
 
 # Step 3: Deploy CloudFormation
@@ -55,6 +131,10 @@ aws cloudformation deploy \
     --stack-name "$STACK_NAME" \
     --capabilities CAPABILITY_NAMED_IAM \
     --region "$AWS_REGION" \
+    --profile "$AWS_PROFILE" \
+    --parameter-overrides \
+        LLMFTScriptsImage="$LLMFT_SCRIPTS_IMAGE" \
+        LLMFTScriptsRepositoryName="$LLMFT_SCRIPTS_REPO_NAME" \
     --no-fail-on-empty-changeset
 
 rm -f "$TEMP_TEMPLATE"
@@ -63,7 +143,8 @@ STATUS=$(aws cloudformation describe-stacks \
     --stack-name "$STACK_NAME" \
     --query "Stacks[0].StackStatus" \
     --output text \
-    --region "$AWS_REGION")
+    --region "$AWS_REGION" \
+    --profile "$AWS_PROFILE")
 
 echo "Stack Status: $STATUS"
 
@@ -73,7 +154,8 @@ if [[ "$STATUS" == *"FAILED"* ]] || [[ "$STATUS" == *"ROLLBACK"* ]]; then
         --stack-name "$STACK_NAME" \
         --query "StackEvents[?contains(ResourceStatus,'FAILED')].[LogicalResourceId,ResourceStatusReason]" \
         --output table \
-        --region "$AWS_REGION"
+        --region "$AWS_REGION" \
+        --profile "$AWS_PROFILE"
     exit 1
 fi
 
@@ -83,19 +165,21 @@ SOURCE_BUCKET=$(aws cloudformation describe-stacks \
     --stack-name "$STACK_NAME" \
     --query "Stacks[0].Outputs[?OutputKey=='SourceBucketName'].OutputValue" \
     --output text \
-    --region "$AWS_REGION")
+    --region "$AWS_REGION" \
+    --profile "$AWS_PROFILE")
 
 REPO_NAME=$(aws cloudformation describe-stacks \
     --stack-name "$STACK_NAME" \
     --query "Stacks[0].Parameters[?ParameterKey=='RepositoryName'].ParameterValue" \
     --output text \
-    --region "$AWS_REGION")
+    --region "$AWS_REGION" \
+    --profile "$AWS_PROFILE")
 
 SOURCE_KEY="${REPO_NAME}/source.zip"
 
 TMPDIR=$(mktemp -d)
 ZIP_FILE="$TMPDIR/source.zip"
-ZIP_FILE="$ZIP_FILE" DOCKERFILE_PATH="$DOCKERFILE_PATH" python3 - <<'PY'
+ZIP_FILE="$ZIP_FILE" DOCKERFILE_PATH="$TEMP_DOCKERFILE_BUILD" python3 - <<'PY'
 import os
 import zipfile
 
@@ -105,8 +189,9 @@ with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
     zf.write(dockerfile, "Dockerfile")
 PY
 
-aws s3 cp "$ZIP_FILE" "s3://${SOURCE_BUCKET}/${SOURCE_KEY}" --region "$AWS_REGION"
+aws s3 cp "$ZIP_FILE" "s3://${SOURCE_BUCKET}/${SOURCE_KEY}" --region "$AWS_REGION" --profile "$AWS_PROFILE"
 rm -rf "$TMPDIR"
+rm -f "$TEMP_DOCKERFILE_BUILD"
 echo "  Uploaded s3://${SOURCE_BUCKET}/${SOURCE_KEY}"
 
 # Step 4: Start CodeBuild
@@ -116,13 +201,15 @@ PROJECT=$(aws cloudformation describe-stacks \
     --stack-name "$STACK_NAME" \
     --query "Stacks[0].Outputs[?OutputKey=='CodeBuildProjectName'].OutputValue" \
     --output text \
-    --region "$AWS_REGION")
+    --region "$AWS_REGION" \
+    --profile "$AWS_PROFILE")
 
 BUILD_ID=$(aws codebuild start-build \
     --project-name "$PROJECT" \
     --query "build.id" \
     --output text \
-    --region "$AWS_REGION")
+    --region "$AWS_REGION" \
+    --profile "$AWS_PROFILE")
 
 echo "Build ID: $BUILD_ID"
 echo "Console:  https://${AWS_REGION}.console.aws.amazon.com/codesuite/codebuild/projects/${PROJECT}/build/${BUILD_ID}"
@@ -136,7 +223,7 @@ exec >> "$LOG_FILE" 2>&1
 # Monitor build
 SEEN_LOGS=""
 while true; do
-    BUILD_JSON=$(aws codebuild batch-get-builds --ids "$BUILD_ID" --region "$AWS_REGION" 2>/dev/null)
+    BUILD_JSON=$(aws codebuild batch-get-builds --ids "$BUILD_ID" --region "$AWS_REGION" --profile "$AWS_PROFILE" 2>/dev/null)
     
     BUILD_STATUS=$(echo "$BUILD_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['builds'][0]['buildStatus'])")
     CURRENT_PHASE=$(echo "$BUILD_JSON" | python3 -c "import sys,json; print(json.load(sys.stdin)['builds'][0].get('currentPhase','QUEUED'))")
@@ -153,7 +240,8 @@ while true; do
             --limit 100 \
             --query "events[*].message" \
             --output text \
-            --region "$AWS_REGION" 2>/dev/null || echo "")
+            --region "$AWS_REGION" \
+            --profile "$AWS_PROFILE" 2>/dev/null || echo "")
         
         if [[ "$NEW_LOGS" != "$SEEN_LOGS" ]] && [[ -n "$NEW_LOGS" ]]; then
             echo "$NEW_LOGS"
@@ -168,7 +256,8 @@ while true; do
             --stack-name "$STACK_NAME" \
             --query "Stacks[0].Outputs[?OutputKey=='ContainerImageUri'].OutputValue" \
             --output text \
-            --region "$AWS_REGION")
+            --region "$AWS_REGION" \
+            --profile "$AWS_PROFILE")
         echo "Container URI: $CONTAINER_URI"
         break
     elif [[ "$BUILD_STATUS" == "FAILED" ]] || [[ "$BUILD_STATUS" == "FAULT" ]] || [[ "$BUILD_STATUS" == "STOPPED" ]] || [[ "$BUILD_STATUS" == "TIMED_OUT" ]]; then
